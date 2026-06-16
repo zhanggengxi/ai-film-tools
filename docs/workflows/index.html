@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComfyUI 工作流模板商店 — AI影视工作流</title>
+    <style>
+        /* ===== Reset & Base ===== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0d0d0f;
+            --bg-secondary: #161618;
+            --bg-card: #1c1c1f;
+            --bg-card-hover: #242428;
+            --border: #2a2a2e;
+            --text-primary: #e8e8ec;
+            --text-secondary: #9898a0;
+            --text-muted: #6a6a72;
+            --accent: #a78bfa;
+            --accent-glow: rgba(167, 139, 250, 0.15);
+            --accent-hover: #b99aff;
+            --price-color: #fbbf24;
+            --radius: 14px;
+            --radius-sm: 8px;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            text-align: center;
+            padding: 64px 24px 48px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: var(--accent-glow);
+            border: 1px solid rgba(167, 139, 250, 0.25);
+            border-radius: 100px;
+            font-size: 13px;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 20px;
+            letter-spacing: 0.3px;
+        }
+
+        .header-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .header h1 {
+            font-size: clamp(28px, 5vw, 46px);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #e8e8ec 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            font-size: clamp(15px, 2vw, 18px);
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header .subtitle-icon {
+            display: inline-block;
+            margin: 0 4px;
+        }
+
+        /* ===== Container ===== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        /* ===== Section Title ===== */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .section-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .section-header .count {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            padding: 4px 12px;
+            background: var(--bg-card);
+            border-radius: 100px;
+            border: 1px solid var(--border);
+        }
+
+        /* ===== Grid ===== */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+        }
+
+        /* ===== Card ===== */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 24px 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(167, 139, 250, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 40px var(--accent-glow);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* Card Icon */
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+            background: var(--accent-glow);
+            border: 1px solid rgba(167, 139, 250, 0.15);
+            flex-shrink: 0;
+        }
+
+        /* Card Tags */
+        .card-tags {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .card-tag {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 3px 10px;
+            border-radius: 100px;
+            background: rgba(167, 139, 250, 0.08);
+            color: var(--accent);
+            border: 1px solid rgba(167, 139, 250, 0.12);
+            letter-spacing: 0.2px;
+        }
+
+        .card-tag.green {
+            background: rgba(34, 197, 94, 0.08);
+            color: #4ade80;
+            border-color: rgba(34, 197, 94, 0.15);
+        }
+
+        .card-tag.blue {
+            background: rgba(96, 165, 250, 0.08);
+            color: #93c5fd;
+            border-color: rgba(96, 165, 250, 0.15);
+        }
+
+        .card-tag.orange {
+            background: rgba(251, 191, 36, 0.08);
+            color: #fcd34d;
+            border-color: rgba(251, 191, 36, 0.15);
+        }
+
+        /* Card Title */
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        /* Card Description */
+        .card-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        /* Card Footer: price + button */
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+            gap: 12px;
+        }
+
+        .card-price {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--price-color);
+            font-family: var(--font-mono);
+            letter-spacing: -0.3px;
+        }
+
+        .card-price .currency {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-right: 2px;
+        }
+
+        .card-price .original {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-decoration: line-through;
+            font-weight: 400;
+            margin-left: 8px;
+        }
+
+        .card-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 22px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: var(--font-sans);
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+            background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 100%);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(167, 139, 250, 0.3);
+        }
+
+        .card-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 6px 24px rgba(167, 139, 250, 0.45);
+            background: linear-gradient(135deg, var(--accent-hover) 0%, #8b5cf6 100%);
+        }
+
+        .card-btn:active {
+            transform: scale(0.97);
+        }
+
+        .card-btn svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        /* ===== Footer ===== */
+        .page-footer {
+            text-align: center;
+            padding: 32px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .page-footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .page-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .header {
+                padding: 40px 20px 32px;
+            }
+
+            .container {
+                padding: 32px 16px 60px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .card {
+                padding: 22px 18px 20px;
+            }
+
+            .card-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .card-btn {
+                justify-content: center;
+                padding: 12px 20px;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ===== Scrollbar ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== Header ===== -->
+    <header class="header">
+        <div class="header-badge">
+            ComfyUI 工作流模板商店
+        </div>
+        <h1>AI 影视级工作流模板</h1>
+        <p>
+            专为影视创作者打造的 ComfyUI 工作流模板合集<br class="spacer">
+            从提示词工程到批量生产，一站式提升你的 AI 影视制作效率
+        </p>
+    </header>
+
+    <!-- ===== Main ===== -->
+    <main class="container">
+
+        <div class="section-header">
+            <h2>📦 精选工作流模板</h2>
+            <span class="count">共 6 个模板</span>
+        </div>
+
+        <div class="grid">
+
+            <!-- ===== 1. 提示词工程 ===== -->
+            <div class="card">
+                <div class="card-icon">🧠</div>
+                <div class="card-tags">
+                    <span class="card-tag">Prompt</span>
+                    <span class="card-tag green">入门</span>
+                </div>
+                <h3 class="card-title">提示词工程工作流</h3>
+                <p class="card-desc">
+                    系统化的提示词优化引擎，集成 CLIP 权重调节、动态 prompt 组合、
+                    负面提示词模板库，助你快速生成高质量影视级画面描述。
+                </p>
+                <div class="card-footer">
+                    <span class="card-price"><span class="currency">¥</span>29</span>
+                    <a href="https://afdian.com/a/your-page?product=prompt-engineering" class="card-btn" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
+                        </svg>
+                        立即购买
+                    </a>
+                </div>
+            </div>
+
+            <!-- ===== 2. 角色一致性 ===== -->
+            <div class="card">
+                <div class="card-icon">🎭</div>
+                <div class="card-tags">
+                    <span class="card-tag">Character</span>
+                    <span class="card-tag blue">进阶</span>
+                </div>
+                <h3 class="card-title">角色一致性工作流</h3>
+                <p class="card-desc">
+                    基于 IP-Adapter + InstantID 的角色保持方案，配合面部特征锁定与
+                    服装风格迁移节点，确保角色在多场景、多角度下始终如一。
+                </p>
+                <div class="card-footer">
+                    <span class="card-price"><span class="currency">¥</span>49</span>
+                    <a href="https://afdian.com/a/your-page?product=character-consistency" class="card-btn" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
+                        </svg>
+                        立即购买
+                    </a>
+                </div>
+            </div>
+
+            <!-- ===== 3. 场景生成 ===== -->
+            <div class="card">
+                <div class="card-icon">🌄</div>
+                <div class="card-tags">
+                    <span class="card-tag">Scene</span>
+                    <span class="card-tag green">入门</span>
+                </div>
+                <h3 class="card-title">场景生成工作流</h3>
+                <p class="card-desc">
+                    一键生成影视级场景画面的完整管线，集成 ControlNet 构图引导、
+                    LoRA 风格微调与多模型融合，支持室内/室外/奇幻等多种场景类型。
+                </p>
+                <div class="card-footer">
+                    <span class="card-price"><span class="currency">¥</span>39</span>
+                    <a href="https://afdian.com/a/your-page?product=scene-generation" class="card-btn" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
+                        </svg>
+                        立即购买
+                    </a>
+                </div>
+            </div>
+
+            <!-- ===== 4. 视频生成 ===== -->
+            <div class="card">
+                <div class="card-icon">🎬</div>
+                <div class="card-tags">
+                    <span class="card-tag">Video</span>
+                    <span class="card-tag orange">旗舰</span>
+                </div>
+                <h3 class="card-title">视频生成工作流</h3>
+                <p class="card-desc">
+                    端到端 AI 视频生成管线，集成 AnimateDiff / SVD 模型，支持
+                    关键帧插值、运动笔刷控制、视频超分与帧率优化，输出流畅影视片段。
+                </p>
+                <div class="card-footer">
+                    <span class="card-price"><span class="currency">¥</span>79</span>
+                    <a href="https://afdian.com/a/your-page?product=video-generation" class="card-btn" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
+                        </svg>
+                        立即购买
+                    </a>
+                </div>
+            </div>
+
+            <!-- ===== 5. 分镜生成 ===== -->
+            <div class="card">
+                <div class="card-icon">📋</div>
+                <div class="card-tags">
+                    <span class="card-tag">Storyboard</span>
+                    <span class="card-tag blue">进阶</span>
+                </div>
+                <h3 class="card-title">分镜生成工作流</h3>
+                <p class="card-desc">
+                    从文字剧本自动生成分镜头脚本与视觉预览，支持镜头角度/景别/
+                    运镜方式参数化控制，批量输出分镜图组，加速前期可视化沟通。
+                </p>
+                <div class="card-footer">
+                    <span class="card-price"><span class="currency">¥</span>59</span>
+                    <a href="https://afdian.com/a/your-page?product=storyboard-generation" class="card-btn" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
+                        </svg>
+                        立即购买
+                    </a>
+                </div>
+            </div>
+
+            <!-- ===== 6. 批量生产 ===== -->
+            <div class="card">
+                <div class="card-icon">⚙️</div>
+                <div class="card-tags">
+                    <span class="card-tag">Batch</span>
+                    <span class="card-tag orange">旗舰</span>
+                </div>
+                <h3 class="card-title">批量生产工作流</h3>
+                <p class="card-desc">
+                    工业化批量生产管线，支持 CSV/JSON 数据驱动、队列调度、
+                    自动保存与日志系统，结合多 GPU 并行分发，适合团队级内容量产。
+                </p>
+                <div class="card-footer">
+                    <span class="card-price"><span class="currency">¥</span>99</span>
+                    <a href="https://afdian.com/a/your-page?product=batch-production" class="card-btn" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
+                        </svg>
+                        立即购买
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ===== Footer ===== -->
+    <footer class="page-footer">
+        <p>
+            ComfyUI 工作流模板商店 &mdash; 由
+            <a href="#" target="_blank" rel="noopener noreferrer">AI 影视工具集</a>
+            提供 &nbsp;·&nbsp; 支付由
+            <a href="https://afdian.com" target="_blank" rel="noopener noreferrer">爱发电</a>
+            支持
+        </p>
+    </footer>
+
+</body>
+</html>
