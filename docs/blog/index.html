@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎬 AI影视工具博客 -- 教程·评测·技巧·趋势</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0b;
+      --surface: #141416;
+      --surface-2: #1c1c1f;
+      --border: #2a2a2e;
+      --text: #f4f4f5;
+      --text-2: #a1a1aa;
+      --text-3: #71717a;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --indigo: #6366f1;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --cyan: #06b6d4;
+      --radius: 16px;
+    }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .hero {
+      padding: 60px 0 40px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+    }
+    .hero h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-2);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 20px;
+      color: var(--text-3);
+      font-size: 0.9rem;
+    }
+    .hero-stats span { display: flex; align-items: center; gap: 6px; }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 36px;
+    }
+    .tab {
+      padding: 8px 20px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+    }
+    .tab:hover { border-color: var(--accent); color: var(--text); }
+    .tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      padding-bottom: 60px;
+    }
+    .card {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 32px rgba(99,102,241,0.12);
+    }
+    .card:hover::before { opacity: 1; }
+    .card-教程::before { background: var(--indigo); }
+    .card-对比::before { background: var(--amber); }
+    .card-技巧::before { background: var(--emerald); }
+    .card-趋势::before { background: var(--rose); }
+    .card-入门指南::before { background: var(--cyan); }
+    .card-badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(99,102,241,0.1);
+      color: var(--accent);
+      margin-bottom: 14px;
+      align-self: flex-start;
+    }
+    .card-教程 .card-badge { background: rgba(99,102,241,0.1); color: var(--indigo); }
+    .card-对比 .card-badge { background: rgba(245,158,11,0.1); color: var(--amber); }
+    .card-技巧 .card-badge { background: rgba(16,185,129,0.1); color: var(--emerald); }
+    .card-趋势 .card-badge { background: rgba(244,63,94,0.1); color: var(--rose); }
+    .card-入门指南 .card-badge { background: rgba(6,182,212,0.1); color: var(--cyan); }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      line-height: 1.4;
+      color: var(--text);
+    }
+    .card-excerpt {
+      font-size: 0.88rem;
+      color: var(--text-2);
+      line-height: 1.6;
+      flex-grow: 1;
+      margin-bottom: 16px;
+    }
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-3);
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+    .site-footer {
+      text-align: center;
+      padding: 32px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--text-3);
+      font-size: 0.85rem;
+    }
+    .site-footer a { margin: 0 10px; }
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 1.8rem; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <h1>🎬 AI影视工具博客</h1>
+      <p>教程 · 评测 · 技巧 · 趋势 · 入门指南 -- 帮你用好AI，创作更好的影视内容</p>
+      <div class="hero-stats">
+        <span>📚 共 15 篇文章</span>
+        <span>📅 更新于 2026-06-16</span>
+        <span>🏷️ 教程 · 对比 · 技巧 · 趋势 · 入门指南</span>
+      </div>
+    </header>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-filter="all">🏠 全部</button>
+      <button class="tab" data-filter="教程">🎓 教程</button>
+      <button class="tab" data-filter="对比">⚔️ 对比</button>
+      <button class="tab" data-filter="技巧">💡 技巧</button>
+      <button class="tab" data-filter="趋势">📈 趋势</button>
+      <button class="tab" data-filter="入门指南">🚀 入门</button>
+    </div>
+    <div class="grid" id="grid">
+      
+    <a href="./ai-video-beginners-guide-2025" class="card card-教程">
+      <div class="card-badge">🎓 教程</div>
+      <h3 class="card-title">2025年AI视频创作入门指南：从零到第一条AI短片</h3>
+      <p class="card-excerpt">🎓 AI Video for Beginners: From Zero to Your First AI Short Film -- 一篇关于AI影视创作的教程文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./how-to-make-ai-avatar-video-step-by-step" class="card card-教程">
+      <div class="card-badge">🛠️ 教程</div>
+      <h3 class="card-title">手把手教你制作AI虚拟人视频：Synthesia完整教程</h3>
+      <p class="card-excerpt">🛠️ Step-by-Step: Create Your First AI Avatar Video with Synthesia -- 一篇关于AI影视创作的教程文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./how-to-clone-voice-with-elevenlabs" class="card card-教程">
+      <div class="card-badge">🎙️ 教程</div>
+      <h3 class="card-title">ElevenLabs语音克隆完全指南：3分钟复刻你的声音</h3>
+      <p class="card-excerpt">🎙️ Complete Guide to Voice Cloning with ElevenLabs in 3 Minutes -- 一篇关于AI影视创作的教程文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./synthesia-vs-heygen-ai-avatar-comparison" class="card card-对比">
+      <div class="card-badge">⚔️ 对比</div>
+      <h3 class="card-title">Synthesia vs HeyGen：2025年AI虚拟人工具全方位对比</h3>
+      <p class="card-excerpt">⚔️ Synthesia vs HeyGen: The Ultimate AI Avatar Tool Comparison -- 一篇关于AI影视创作的对比文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./best-ai-video-tools-ranked-2025" class="card card-对比">
+      <div class="card-badge">🏆 对比</div>
+      <h3 class="card-title">2025年AI视频工具TOP10排行榜：谁是你的最佳选择？</h3>
+      <p class="card-excerpt">🏆 Top 10 AI Video Tools in 2025 - Which One Is Right for You? -- 一篇关于AI影视创作的对比文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./free-vs-paid-ai-film-tools" class="card card-对比">
+      <div class="card-badge">💰 对比</div>
+      <h3 class="card-title">免费 vs 付费AI影视工具：省钱还是省时间？</h3>
+      <p class="card-excerpt">💰 Free vs Paid AI Film Tools: Save Money or Save Time? -- 一篇关于AI影视创作的对比文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./ai-film-tips-make-videos-look-professional" class="card card-技巧">
+      <div class="card-badge">💡 技巧</div>
+      <h3 class="card-title">5个让AI视频更专业的隐藏技巧（影视创作者必看）</h3>
+      <p class="card-excerpt">💡 5 Pro Tips to Make Your AI Videos Look More Professional -- 一篇关于AI影视创作的技巧文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./pictory-hacks-content-creators" class="card card-技巧">
+      <div class="card-badge">🎯 技巧</div>
+      <h3 class="card-title">Pictory高级技巧：10分钟把博客变成爆款视频</h3>
+      <p class="card-excerpt">🎯 Pictory Hacks: Turn Blog Posts Into Viral Videos in 10 Minutes -- 一篇关于AI影视创作的技巧文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./runway-gen3-text-to-video-prompt-guide" class="card card-技巧">
+      <div class="card-badge">✨ 技巧</div>
+      <h3 class="card-title">Runway Gen-3提示词秘籍：写出电影级AI画面的Prompt技巧</h3>
+      <p class="card-excerpt">✨ Runway Gen-3 Prompt Guide: Crafting Cinematic AI Videos -- 一篇关于AI影视创作的技巧文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./ai-film-industry-trends-2026" class="card card-趋势">
+      <div class="card-badge">📈 趋势</div>
+      <h3 class="card-title">2026年AI影视行业趋势：这些变化将重新定义电影制作</h3>
+      <p class="card-excerpt">📈 AI Film Industry Trends 2026: Changes Redefining Filmmaking -- 一篇关于AI影视创作的趋势文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./ai-video-translation-global-market" class="card card-趋势">
+      <div class="card-badge">🌐 趋势</div>
+      <h3 class="card-title">AI视频翻译如何帮你打开全球市场？HeyGen实战分析</h3>
+      <p class="card-excerpt">🌐 How AI Video Translation Opens Global Markets with HeyGen -- 一篇关于AI影视创作的趋势文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./future-of-ai-filmmaking-2025-2030" class="card card-趋势">
+      <div class="card-badge">🤖 趋势</div>
+      <h3 class="card-title">AI电影制作未来5年：从辅助工具到全自动电影工厂</h3>
+      <p class="card-excerpt">🤖 The Future of AI Filmmaking 2025-2030: From Tools to Automation -- 一篇关于AI影视创作的趋势文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./best-free-ai-film-tools-for-students" class="card card-入门指南">
+      <div class="card-badge">🚀 入门指南</div>
+      <h3 class="card-title">学生党福音：2025年最适合学生使用的免费AI影视工具</h3>
+      <p class="card-excerpt">🚀 Best Free AI Film Tools for Students in 2025 -- 一篇关于AI影视创作的入门指南文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./pictory-text-to-video-workflow" class="card card-入门指南">
+      <div class="card-badge">🔄 入门指南</div>
+      <h3 class="card-title">Pictory完整工作流：从文案到视频只需5步</h3>
+      <p class="card-excerpt">🔄 Pictory Workflow: From Script to Video in 5 Steps -- 一篇关于AI影视创作的入门指南文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    <a href="./elevenlabs-dubbing-multilingual-film" class="card card-入门指南">
+      <div class="card-badge">🎬 入门指南</div>
+      <h3 class="card-title">用ElevenLabs给短片配音：多语言电影配音完整流程</h3>
+      <p class="card-excerpt">🎬 Dubbing Your Short Film with ElevenLabs: A Complete Workflow -- 一篇关于AI影视创作的入门指南文章，帮助你更好地使用AI工具。</p>
+      <div class="card-footer">
+        <span class="card-date">📅 2026-06-16</span>
+        <span class="card-read">📖 5-10分钟</span>
+      </div>
+    </a>
+    </div>
+    <footer class="site-footer">
+      <p>🎬 <a href="https://zhanggengxi.github.io/ai-film-tools/">AI Film Shot Planner</a> 免费使用</p>
+      <p><a href="https://gengxi.gumroad.com">📦 Gumroad 商店</a> &middot; <a href="https://afdian.net/a/xiaosimao">⚡ 爱发电支持</a></p>
+      <p style="margin-top:12px; font-size:0.78rem;">📢 部分文章包含联盟营销链接</p>
+    </footer>
+  </div>
+  <script>
+    document.getElementById('tabs').addEventListener('click', function(e) {
+      var btn = e.target.closest('.tab');
+      if (!btn) return;
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+      btn.classList.add('active');
+      var filter = btn.dataset.filter;
+      document.querySelectorAll('.card').forEach(function(card) {
+        if (filter === 'all') {
+          card.style.display = '';
+        } else {
+          card.style.display = card.classList.contains('card-' + filter) ? '' : 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
