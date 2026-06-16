@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 电影镜头规划器 — 智能镜头分解生成器 | SaaS</title>
+  <style>
+    /* ── Modern Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0b;
+      --surface: #141416;
+      --surface-2: #1c1c1f;
+      --surface-3: #252529;
+      --border: #2a2a2e;
+      --border-light: #3a3a3e;
+      --text: #f4f4f5;
+      --text-2: #a1a1aa;
+      --text-3: #71717a;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --accent-subtle: rgba(99,102,241,0.1);
+      --accent-glow: rgba(99,102,241,0.25);
+      --green: #22c55e;
+      --green-subtle: rgba(34,197,94,0.1);
+      --amber: #eab308;
+      --amber-subtle: rgba(234,179,8,0.1);
+      --red: #ef4444;
+      --gradient: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+      --gradient-2: linear-gradient(135deg, #6366f1, #8b5cf6);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 16px;
+      --max-width: 1100px;
+      --header-h: 64px;
+    }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); }
+
+    /* ── Header ── */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: rgba(20,20,22,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      z-index: 1000;
+    }
+    .header .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 17px; font-weight: 700;
+    }
+    .header .logo-icon {
+      width: 30px; height: 30px;
+      background: var(--gradient);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .header nav { display: flex; gap: 8px; align-items: center; }
+    .header nav a {
+      color: var(--text-2);
+      font-size: 14px; font-weight: 500;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+    }
+    .header nav a:hover { color: var(--text); background: var(--surface-2); }
+    .header .header-right { display: flex; align-items: center; gap: 12px; }
+    .tier-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--accent-subtle);
+      color: var(--accent);
+      border: 1px solid rgba(99,102,241,0.2);
+    }
+    .tier-badge.pro { background: var(--green-subtle); color: var(--green); border-color: rgba(34,197,94,0.2); }
+    .tier-badge.lifetime { background: var(--amber-subtle); color: var(--amber); border-color: rgba(234,179,8,0.2); }
+
+    /* ── Sections ── */
+    .section { padding: 0 24px; }
+    .section-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-content { position: relative; max-width: 720px; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: var(--accent-subtle);
+      border: 1px solid rgba(99,102,241,0.2);
+      color: var(--accent-hover);
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: var(--text-2);
+      max-width: 600px;
+      margin: 0 auto 32px;
+      line-height: 1.7;
+    }
+    .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .hero-stats {
+      display: flex; gap: 40px; justify-content: center;
+      margin-top: 48px;
+      flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat .num { font-size: 28px; font-weight: 800; color: var(--text); }
+    .hero-stat .label { font-size: 13px; color: var(--text-3); margin-top: 2px; }
+
+    /* ── Features ── */
+    .features-section {
+      padding: 100px 24px;
+      border-top: 1px solid var(--border);
+    }
+    .section-title {
+      text-align: center;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .section-subtitle {
+      text-align: center;
+      color: var(--text-3);
+      font-size: 15px;
+      margin-bottom: 48px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      transition: all 0.3s;
+    }
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .feature-card .icon { font-size: 32px; margin-bottom: 14px; }
+    .feature-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+
+    /* ── Pricing ── */
+    .pricing-section {
+      padding: 100px 24px;
+      border-top: 1px solid var(--border);
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .pricing-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .pricing-card:hover {
+      border-color: var(--border-light);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .pricing-card.featured {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, var(--surface), rgba(99,102,241,0.05));
+    }
+    .pricing-card.featured::before {
+      content: '最受欢迎';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gradient-2);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 16px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+    .pricing-card .plan-name {
+      font-size: 13px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--text-3);
+      margin-bottom: 16px;
+    }
+    .pricing-card .price {
+      font-size: 42px; font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .pricing-card .price .currency { font-size: 20px; vertical-align: super; }
+    .pricing-card .price .period {
+      font-size: 14px; color: var(--text-3);
+      font-weight: 400;
+    }
+    .pricing-card .price-sub {
+      font-size: 13px; color: var(--text-3);
+      margin-bottom: 20px;
+    }
+    .pricing-card .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+    .pricing-card .features-list {
+      list-style: none;
+      text-align: left;
+      flex: 1;
+      margin-bottom: 24px;
+    }
+    .pricing-card .features-list li {
+      padding: 6px 0;
+      font-size: 14px;
+      color: var(--text-2);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .pricing-card .features-list li .check { color: var(--green); }
+    .pricing-card .features-list li .cross { color: var(--text-3); opacity: 0.5; }
+    .pricing-card .btn-block { width: 100%; justify-content: center; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--gradient-2);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
+    .btn-primary:disabled {
+      opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none;
+    }
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-lg { padding: 14px 32px; font-size: 16px; border-radius: var(--radius); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-success { background: var(--green); color: #000; }
+    .btn-success:hover { background: #16a34a; }
+    .btn-coffee {
+      background: #FFDD00;
+      color: #000;
+      font-weight: 700;
+    }
+    .btn-coffee:hover { background: #FFCD00; }
+
+    /* ── App Section ── */
+    .app-section {
+      padding: 100px 24px 80px;
+      border-top: 1px solid var(--border);
+    }
+    .app-container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .app-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .app-header-bar h2 { font-size: 22px; font-weight: 700; }
+    .app-usage-bar {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 13px; color: var(--text-2);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 16px;
+    }
+    .app-usage-bar .usage-count { color: var(--text); font-weight: 600; }
+    .app-usage-bar .usage-limit { color: var(--text-3); }
+
+    /* Settings Bar */
+    .settings-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 28px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .settings-bar label { font-size: 13px; color: var(--text-2); font-weight: 500; }
+    .settings-bar input, .settings-bar select {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 8px 12px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .settings-bar input:focus, .settings-bar select:focus { border-color: var(--accent); }
+    .settings-bar input[type="text"] { min-width: 200px; flex: 1; }
+    .settings-bar select { min-width: 120px; }
+
+    /* Input Area */
+    .input-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .input-section h2 {
+      font-size: 15px; font-weight: 600; margin-bottom: 12px;
+      color: var(--text-2);
+    }
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 16px;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.7;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--text-3); }
+    .input-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--text-3);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* Loading */
+    .loading-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 0;
+      gap: 12px;
+    }
+    .loading-state.active { display: flex; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Results */
+    .results-section { display: none; margin-top: 16px; }
+    .results-section.active { display: block; }
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .results-header h2 { font-size: 18px; font-weight: 600; }
+    .results-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Shot Grid */
+    .shot-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .shot-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+    .shot-card:hover { border-color: var(--accent); }
+    .shot-card .shot-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .shot-card .shot-number {
+      font-size: 11px; font-weight: 700; color: var(--accent);
+      background: var(--accent-subtle);
+      padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;
+    }
+    .shot-card .shot-duration {
+      font-size: 12px; color: var(--text-3);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    .shot-card .shot-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .shot-card .shot-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .shot-card .tag {
+      font-size: 11px; padding: 2px 8px; border-radius: 4px;
+      background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border);
+    }
+    .shot-card .tag.camera { color: #38bdf8; border-color: rgba(56,189,248,.2); background: rgba(56,189,248,.08); }
+    .shot-card .tag.lighting { color: #fbbf24; border-color: rgba(251,191,36,.2); background: rgba(251,191,36,.08); }
+    .shot-card .tag.mood { color: #a78bfa; border-color: rgba(167,139,250,.2); background: rgba(167,139,250,.08); }
+    .shot-card .shot-prompt {
+      background: var(--surface-2); border-radius: var(--radius-sm);
+      padding: 12px 16px; font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--text-2); line-height: 1.7;
+      white-space: pre-wrap; word-break: break-word; margin-top: 10px;
+    }
+    .shot-card .shot-description {
+      font-size: 14px; color: var(--text-2);
+      line-height: 1.7; margin-bottom: 8px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center; padding: 64px 24px; color: var(--text-3);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--text-2); margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; }
+
+    /* Error */
+    .error-message {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px; color: var(--red);
+      font-size: 13px; display: none;
+    }
+    .error-message.active { display: block; }
+
+    /* Examples */
+    .examples {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;
+    }
+    .example-chip {
+      font-size: 12px; padding: 4px 12px; border-radius: 20px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text-2); cursor: pointer; transition: all 0.2s;
+    }
+    .example-chip:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .footer-links {
+      display: flex; justify-content: center; gap: 20px;
+      flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .footer-links a {
+      color: var(--text-3); font-size: 13px;
+      display: flex; align-items: center; gap: 6px;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { font-size: 12px; color: var(--text-3); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 20px;
+      font-size: 13px; color: var(--text);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      display: none; z-index: 200;
+      backdrop-filter: blur(12px);
+    }
+    .toast.active { display: block; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 300;
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      max-width: 440px;
+      width: 100%;
+    }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .modal p { font-size: 14px; color: var(--text-2); margin-bottom: 20px; }
+    .modal input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 12px 16px;
+      font-size: 14px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      outline: none;
+      margin-bottom: 16px;
+    }
+    .modal input:focus { border-color: var(--accent); }
+    .modal .modal-actions { display: flex; gap: 8px; }
+    .modal .modal-actions .btn { flex: 1; justify-content: center; }
+    .modal .demo-keys {
+      margin-top: 12px;
+      font-size: 12px; color: var(--text-3);
+      text-align: center;
+    }
+    .modal .demo-keys code {
+      display: inline-block; background: var(--surface-2);
+      padding: 2px 8px; border-radius: 4px;
+      font-size: 11px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .modal .demo-keys code:hover { background: var(--surface-3); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .header nav a { font-size: 13px; padding: 4px 10px; }
+      .hero { padding: 100px 20px 60px; }
+      .hero-stats { gap: 24px; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
+      .app-header-bar { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 640px) {
+      .settings-bar { flex-direction: column; }
+      .settings-bar input[type="text"] { min-width: 0; width: 100%; }
+      .results-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+      .header { padding: 0 16px; }
+      .header .logo { font-size: 14px; }
+      .header .logo-icon { width: 26px; height: 26px; font-size: 14px; }
+      .header nav { gap: 4px; }
+      .header nav a { padding: 4px 8px; font-size: 12px; }
+      .modal { padding: 24px; }
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in { animation: fadeInUp 0.6s ease-out both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">🎬</div>
+      <span>AI 电影镜头规划器</span>
+    </div>
+    <nav>
+      <a href="#features">功能</a>
+      <a href="#pricing">定价</a>
+      <a href="#app">应用</a>
+    </nav>
+    <div class="header-right">
+      <span class="tier-badge" id="tierBadge">⚡ 免费版</span>
+    </div>
+  </header>
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge animate-in">🤖 由 DeepSeek AI 驱动</div>
+      <h1 class="animate-in delay-1">用 AI 打造电影级<br>镜头规划</h1>
+      <p class="animate-in delay-2">
+        输入你的电影概念，AI 自动生成专业镜头分解 —— 包括摄影机角度、灯光设计、情绪氛围和 AI 图像生成提示词
+      </p>
+      <div class="hero-cta animate-in delay-3">
+        <a href="#app" class="btn btn-primary btn-lg">🚀 免费开始使用</a>
+        <a href="#pricing" class="btn btn-outline btn-lg">💰 查看定价</a>
+      </div>
+      <div class="hero-stats animate-in delay-4">
+        <div class="hero-stat">
+          <div class="num">6-25</div>
+          <div class="label">每份镜头数</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">AI</div>
+          <div class="label">智能生成</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">🎬</div>
+          <div class="label">专业级输出</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FEATURES ═══ -->
+  <section id="features" class="features-section section">
+    <div class="section-inner">
+      <h2 class="section-title">为什么选择 AI 电影镜头规划器？</h2>
+      <p class="section-subtitle">从创意到镜头，一站式 AI 电影制作工具</p>
+      <div class="features-grid">
+        <div class="feature-card animate-in">
+          <div class="icon">🎯</div>
+          <h3>智能镜头分解</h3>
+          <p>只需一段概念描述，AI 自动生成完整的镜头分解，包含景别、运镜、时长和转场</p>
+        </div>
+        <div class="feature-card animate-in delay-1">
+          <div class="icon">📷</div>
+          <h3>专业摄影指导</h3>
+          <p>每个镜头都包含详细的摄影机角度、镜头运动和光学参数，达到电影级标准</p>
+        </div>
+        <div class="feature-card animate-in delay-2">
+          <div class="icon">💡</div>
+          <h3>灯光与氛围设计</h3>
+          <p>自动生成灯光方案和情绪氛围设定，从金色时刻到低调光，应有尽有</p>
+        </div>
+        <div class="feature-card animate-in">
+          <div class="icon">🤖</div>
+          <h3>AI 图像提示词</h3>
+          <p>每个镜头附带可直接用于 Midjourney / DALL·E / Stable Diffusion 的完整提示词</p>
+        </div>
+        <div class="feature-card animate-in delay-1">
+          <div class="icon">📤</div>
+          <h3>多格式导出</h3>
+          <p>支持复制到剪贴板和导出 Markdown 格式，方便后期制作和团队协作</p>
+        </div>
+        <div class="feature-card animate-in delay-2">
+          <div class="icon">🎨</div>
+          <h3>预设示例</h3>
+          <p>内置史诗奇幻、黑色电影、科幻惊悚、浪漫爱情等多种类型的一键示例</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PRICING ═══ -->
+  <section id="pricing" class="pricing-section section">
+    <div class="section-inner">
+      <h2 class="section-title">选择适合你的方案</h2>
+      <p class="section-subtitle">从免费入门到专业无限使用，满足不同需求</p>
+      <div class="pricing-grid">
+        <!-- Free -->
+        <div class="pricing-card animate-in">
+          <div class="plan-name">免费版</div>
+          <div class="price"><span class="currency">¥</span>0</div>
+          <div class="price-sub">/ 永远免费</div>
+          <div class="divider"></div>
+          <ul class="features-list">
+            <li><span class="check">✅</span> 每月 5 份镜头规划</li>
+            <li><span class="check">✅</span> 6-25 个镜头/份</li>
+            <li><span class="check">✅</span> DeepSeek AI 驱动</li>
+            <li><span class="check">✅</span> 复制与导出功能</li>
+            <li><span class="cross">❌</span> 无限使用</li>
+            <li><span class="cross">❌</span> 优先支持</li>
+          </ul>
+          <a href="#app" class="btn btn-outline btn-block" onclick="closeMobileNav()">免费开始</a>
+        </div>
+
+        <!-- Pro -->
+        <div class="pricing-card featured animate-in delay-1">
+          <div class="plan-name">专业版</div>
+          <div class="price">
+            <span class="currency">$</span>9.99
+            <span class="period">/ 月</span>
+          </div>
+          <div class="price-sub">≈ ¥72/月</div>
+          <div class="divider"></div>
+          <ul class="features-list">
+            <li><span class="check">✅</span> 🎯 <strong style="color:var(--text);">无限镜头规划</strong></li>
+            <li><span class="check">✅</span> 6-25 个镜头/份</li>
+            <li><span class="check">✅</span> DeepSeek AI 驱动</li>
+            <li><span class="check">✅</span> 复制与导出功能</li>
+            <li><span class="check">✅</span> 无水印体验</li>
+            <li><span class="check">✅</span> 优先邮件支持</li>
+          </ul>
+          <button class="btn btn-primary btn-block" onclick="startStripeCheckout('pro')">💳 立即订阅</button>
+        </div>
+
+        <!-- Lifetime -->
+        <div class="pricing-card animate-in delay-2">
+          <div class="plan-name">终身版</div>
+          <div class="price">
+            <span class="currency">$</span>99
+            <span class="period">/ 一次性</span>
+          </div>
+          <div class="price-sub">≈ ¥720 — 终生使用</div>
+          <div class="divider"></div>
+          <ul class="features-list">
+            <li><span class="check">✅</span> 🎯 <strong style="color:var(--text);">终身无限使用</strong></li>
+            <li><span class="check">✅</span> 6-25 个镜头/份</li>
+            <li><span class="check">✅</span> DeepSeek AI 驱动</li>
+            <li><span class="check">✅</span> 复制与导出功能</li>
+            <li><span class="check">✅</span> 🏆 <strong style="color:var(--amber);">终身会员标识</strong></li>
+            <li><span class="check">✅</span> 优先邮件支持 + 未来更新</li>
+          </ul>
+          <button class="btn btn-outline btn-block" onclick="startStripeCheckout('lifetime')">💎 购买终身版</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ APP ═══ -->
+  <section id="app" class="app-section section">
+    <div class="app-container">
+      <div class="app-header-bar">
+        <h2>🎬 AI 镜头规划器</h2>
+        <div class="app-usage-bar" id="usageBar">
+          📊 本月使用: <span class="usage-count" id="usageCount">0</span>
+          <span class="usage-limit" id="usageLimit">/ 5 份</span>
+          <span id="usageStatus" style="margin-left:4px;"></span>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="settings-bar">
+        <label for="apiKey">DeepSeek API Key</label>
+        <input type="text" id="apiKey" placeholder="sk-... 输入你的 DeepSeek API 密钥" value="">
+        <label for="shotsCount">镜头数</label>
+        <select id="shotsCount">
+          <option value="6">6 个镜头</option>
+          <option value="9" selected>9 个镜头</option>
+          <option value="12">12 个镜头</option>
+          <option value="18">18 个镜头（详细）</option>
+          <option value="25">25 个镜头（完整序列）</option>
+        </select>
+      </div>
+
+      <!-- Input -->
+      <div class="input-section">
+        <h2>🎯 描述你的电影概念</h2>
+        <textarea id="conceptInput" placeholder="描述你的电影场景、故事节拍或概念。尽可能详细地描述情绪、场景、角色和动作...&#10;&#10;例如：一场史诗般的奇幻战斗场景，日落时分。一名孤身战士手持发光剑刃，站在悬崖上，俯瞰着由黑暗生物组成的大军。天空呈现紫色和橙色。戏剧性的管弦乐响起，战士举起剑刃..." rows="6"></textarea>
+        <div class="examples">
+          <span class="example-chip" data-example="epic fantasy battle at sunset, lone warrior with glowing sword, army of dark creatures below, dramatic orchestral mood">⚔️ 史诗奇幻</span>
+          <span class="example-chip" data-example="noir detective walking through rain-soaked city streets at night, neon reflections, mysterious figure in shadows, tense atmosphere">🌃 黑色电影</span>
+          <span class="example-chip" data-example="sci-fi space station control room, emergency alarms, crew rushing, huge window showing an approaching asteroid, panic and urgency">🚀 科幻惊悚</span>
+          <span class="example-chip" data-example="romantic first meeting in a Parisian cafe, golden hour, accidental coffee spill, eye contact, slow motion, warm and tender">💕 浪漫爱情</span>
+        </div>
+        <div class="input-footer">
+          <span><span id="charCount">0</span> 字符</span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span id="licenseInfo" style="font-size:11px;color:var(--text-3);"></span>
+            <button class="btn btn-primary" id="generateBtn">✨ 生成镜头分解</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <span style="color:var(--text-2);font-size:14px;">正在分析你的概念并生成镜头...</span>
+      </div>
+
+      <!-- Error -->
+      <div class="error-message" id="errorMessage"></div>
+
+      <!-- Results -->
+      <div class="results-section" id="resultsSection">
+        <div class="results-header">
+          <h2>📋 镜头分解</h2>
+          <div class="results-actions">
+            <button class="btn btn-secondary btn-sm" id="copyBtn">📋 复制全部</button>
+            <button class="btn btn-secondary btn-sm" id="exportBtn">📥 导出 Markdown</button>
+            <button class="btn btn-secondary btn-sm" id="newBtn">🔄 新建</button>
+          </div>
+        </div>
+        <div class="shot-grid" id="shotGrid"></div>
+      </div>
+
+      <div class="empty-state" id="emptyState">
+        <div class="icon">🎬</div>
+        <h3>准备规划你的下一部电影</h3>
+        <p>在上方输入你的概念，点击「生成镜头分解」<br>即可获得包含 AI 图像提示词的专业电影镜头方案。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="https://github.com/sponsors/your-username" target="_blank" rel="noopener">❤️ GitHub Sponsors</a>
+      <a href="https://www.buymeacoffee.com/your-username" target="_blank" rel="noopener">☕ Buy Me a Coffee</a>
+      <a href="#pricing" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'});return false;">💎 升级到专业版</a>
+      <a href="#" id="enterLicenseLink">🔑 输入许可证密钥</a>
+    </div>
+    <div class="footer-copy">
+      © 2024 AI 电影镜头规划器 — 用 AI 赋能电影创作
+    </div>
+  </footer>
+
+  <!-- ═══ TOAST ═══ -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ═══ LICENSE MODAL ═══ -->
+  <div class="modal-overlay" id="licenseModal">
+    <div class="modal">
+      <h3>🔑 输入许可证密钥</h3>
+      <p>购买专业版或终身版后，将收到的许可证密钥粘贴到下方即可解锁。</p>
+      <input type="text" id="licenseKeyInput" placeholder="例如：PRO-XXXX-XXXX 或 LIFETIME-XXXX-XXXX">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeLicenseModal()">取消</button>
+        <button class="btn btn-primary" onclick="verifyLicenseKey()">验证密钥</button>
+      </div>
+      <div class="demo-keys">
+        💡 测试密钥：<code onclick="fillDemoKey('PRO-DEMO-2024-ACTIVE')">PRO-DEMO-2024-ACTIVE</code>
+        <code onclick="fillDemoKey('LIFETIME-DEMO-2024-ACTIVE')">LIFETIME-DEMO-2024-ACTIVE</code>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ══════════════════════════════════════════════════
+    //  LICENSE & TIER MANAGEMENT
+    // ══════════════════════════════════════════════════
+
+    function getLicenseTier() {
+      try {
+        return localStorage.getItem('df_license_tier') || 'free';
+      } catch(e) { return 'free'; }
+    }
+
+    function getLicenseKey() {
+      try { return localStorage.getItem('df_license') || ''; } catch(e) { return ''; }
+    }
+
+    function setLicense(tier, key) {
+      try {
+        localStorage.setItem('df_license_tier', tier);
+        localStorage.setItem('df_license', key);
+      } catch(e) {}
+      updateUI();
+    }
+
+    function clearLicense() {
+      try {
+        localStorage.removeItem('df_license_tier');
+        localStorage.removeItem('df_license');
+      } catch(e) {}
+      updateUI();
+    }
+
+    // ── Usage tracking ──
+    function getUsageMonth() {
+      try { return localStorage.getItem('df_usage_month') || ''; } catch(e) { return ''; }
+    }
+
+    function getUsageCount() {
+      try { return parseInt(localStorage.getItem('df_usage_count') || '0'); } catch(e) { return 0; }
+    }
+
+    function getCurrentMonth() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    }
+
+    function incrementUsage() {
+      const month = getCurrentMonth();
+      if (getUsageMonth() !== month) {
+        try {
+          localStorage.setItem('df_usage_month', month);
+          localStorage.setItem('df_usage_count', '1');
+        } catch(e) {}
+      } else {
+        const count = getUsageCount() + 1;
+        try { localStorage.setItem('df_usage_count', String(count)); } catch(e) {}
+      }
+      updateUI();
+    }
+
+    function getUsageLimit() {
+      const tier = getLicenseTier();
+      if (tier === 'pro' || tier === 'lifetime') return Infinity;
+      return 5;
+    }
+
+    function canGenerate() {
+      const tier = getLicenseTier();
+      if (tier === 'pro' || tier === 'lifetime') return true;
+      const count = getUsageCount();
+      const month = getUsageMonth();
+      const curMonth = getCurrentMonth();
+      if (month !== curMonth) return true;
+      return count < 5;
+    }
+
+    function getRemaining() {
+      const limit = getUsageLimit();
+      if (limit === Infinity) return '∞';
+      const count = getUsageCount();
+      const month = getUsageMonth();
+      const curMonth = getCurrentMonth();
+      if (month !== curMonth) return 5;
+      return Math.max(0, 5 - count);
+    }
+
+    // ── License verification ──
+    function isValidLicenseKey(key) {
+      if (!key || typeof key !== 'string') return false;
+      const trimmed = key.trim().toUpperCase();
+      // Demo keys always valid
+      if (trimmed === 'PRO-DEMO-2024-ACTIVE') return { valid: true, tier: 'pro' };
+      if (trimmed === 'LIFETIME-DEMO-2024-ACTIVE') return { valid: true, tier: 'lifetime' };
+      // Pattern-based verification: PRO-XXXX-XXXX or LIFETIME-XXXX-XXXX
+      const proMatch = trimmed.match(/^PRO-([A-Z0-9]{4})-([A-Z0-9]{4})$/);
+      if (proMatch) {
+        // Simple checksum: first 4 chars XOR sum mod 36 maps to last 4 chars
+        const part1 = proMatch[1];
+        const part2 = proMatch[2];
+        let sum = 0;
+        for (let i = 0; i < part1.length; i++) {
+          sum += part1.charCodeAt(i);
+        }
+        const expected = String(sum % 9999).padStart(4, '0');
+        // Allow some flexibility — for demo purposes, accept any well-formed key
+        return { valid: true, tier: 'pro' };
+      }
+      const lifetimeMatch = trimmed.match(/^LIFETIME-([A-Z0-9]{4})-([A-Z0-9]{4})$/);
+      if (lifetimeMatch) {
+        return { valid: true, tier: 'lifetime' };
+      }
+      return { valid: false };
+    }
+
+    function verifyLicenseKey() {
+      const input = document.getElementById('licenseKeyInput');
+      const result = isValidLicenseKey(input.value.trim());
+      if (result.valid) {
+        setLicense(result.tier, input.value.trim());
+        closeLicenseModal();
+        showToast('✅ 许可证验证成功！已解锁 ' + (result.tier === 'pro' ? '专业版' : '终身版') + ' 功能');
+        updateUI();
+      } else {
+        showToast('❌ 无效的许可证密钥，请重试');
+      }
+    }
+
+    function fillDemoKey(key) {
+      document.getElementById('licenseKeyInput').value = key;
+    }
+
+    function closeLicenseModal() {
+      document.getElementById('licenseModal').classList.remove('active');
+    }
+
+    // ── Stripe Checkout ──
+    function startStripeCheckout(tier) {
+      // ── 替换为你的 Stripe Checkout 链接 ──
+      const STRIPE_LINKS = {
+        pro: 'https://buy.stripe.com/00_placeholder_pro_monthly',
+        lifetime: 'https://buy.stripe.com/00_placeholder_lifetime'
+      };
+      const url = STRIPE_LINKS[tier];
+      if (url && !url.includes('placeholder')) {
+        // Save return URL so we can detect success
+        try { localStorage.setItem('df_stripe_return', 'pending'); } catch(e) {}
+        window.open(url, '_blank');
+        showToast('🔄 正在打开 Stripe 结账页面... 完成后请使用邮件中的许可证密钥激活');
+      } else {
+        // Demo mode: show license modal instead
+        showToast('💡 演示模式：请使用测试密钥激活。正式部署后替换 Stripe 链接');
+        document.getElementById('licenseModal').classList.add('active');
+      }
+    }
+
+    // ── UI Updates ──
+    function updateUI() {
+      const tier = getLicenseTier();
+      const badge = document.getElementById('tierBadge');
+      const usageBar = document.getElementById('usageBar');
+      const usageCount = document.getElementById('usageCount');
+      const usageLimit = document.getElementById('usageLimit');
+      const usageStatus = document.getElementById('usageStatus');
+      const licenseInfo = document.getElementById('licenseInfo');
+      const genBtn = document.getElementById('generateBtn');
+
+      // Badge
+      if (tier === 'pro') {
+        badge.className = 'tier-badge pro';
+        badge.innerHTML = '⭐ 专业版';
+      } else if (tier === 'lifetime') {
+        badge.className = 'tier-badge lifetime';
+        badge.innerHTML = '🏆 终身版';
+      } else {
+        badge.className = 'tier-badge';
+        badge.innerHTML = '⚡ 免费版';
+      }
+
+      // Usage
+      const isUnlimited = (tier === 'pro' || tier === 'lifetime');
+      const count = getUsageCount();
+      const month = getUsageMonth();
+      const curMonth = getCurrentMonth();
+      const effectiveCount = (month === curMonth) ? count : 0;
+
+      usageCount.textContent = effectiveCount;
+      if (isUnlimited) {
+        usageLimit.textContent = '/ ∞';
+        usageStatus.textContent = '✅ 无限使用';
+        usageStatus.style.color = 'var(--green)';
+      } else {
+        usageLimit.textContent = '/ 5 份';
+        const remaining = Math.max(0, 5 - effectiveCount);
+        usageStatus.textContent = remaining > 0 ? '✅ 剩余 ' + remaining + ' 份' : '⚠️ 已用尽';
+        usageStatus.style.color = remaining > 0 ? 'var(--green)' : 'var(--amber)';
+      }
+
+      // License info
+      const key = getLicenseKey();
+      if (key) {
+        licenseInfo.textContent = '🔑 ' + key.slice(0, 15) + '...';
+      } else if (isUnlimited) {
+        licenseInfo.textContent = '✅ 已解锁';
+      } else {
+        licenseInfo.textContent = '';
+      }
+
+      // Generate button
+      if (!canGenerate()) {
+        genBtn.disabled = true;
+        genBtn.title = '免费版每月仅限 5 份，请升级到专业版';
+      } else {
+        genBtn.disabled = false;
+        genBtn.title = '';
+      }
+    }
+
+    // ══════════════════════════════════════════════════
+    //  CHECK URL PARAMS ON LOAD
+    // ══════════════════════════════════════════════════
+
+    function checkUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      // Check for license param
+      const lic = params.get('license');
+      if (lic) {
+        const result = isValidLicenseKey(lic);
+        if (result.valid) {
+          setLicense(result.tier, lic);
+          showToast('✅ 许可证已激活！' + (result.tier === 'pro' ? '专业版' : '终身版'));
+        }
+      }
+      // Check for Stripe success redirect
+      if (params.get('checkout') === 'success' || params.get('session_id')) {
+        showToast('🎉 支付成功！请将收到的许可证密钥粘贴到「输入许可证密钥」中激活');
+      }
+      // Check for API key in URL
+      const key = params.get('key');
+      if (key) {
+        document.getElementById('apiKey').value = key;
+        try { localStorage.setItem('df_api_key', key); } catch(e) {}
+      }
+      // Clean URL if we have params
+      if (params.toString()) {
+        try {
+          // Smooth: keep hash but remove query params if handled
+          if (lic || params.get('checkout') === 'success' || params.get('session_id') || params.get('key')) {
+            // Don't remove key= param if it was intentional
+            if (lic || params.get('checkout') === 'success' || params.get('session_id')) {
+              window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+            }
+          }
+        } catch(e) {}
+      }
+    }
+
+    // ══════════════════════════════════════════════════
+    //  SHOT PLANNER (existing functionality + Chinese)
+    // ══════════════════════════════════════════════════
+
+    let currentShots = [];
+
+    // DOM refs
+    const apiKeyInput = document.getElementById('apiKey');
+    const conceptInput = document.getElementById('conceptInput');
+    const shotsCount = document.getElementById('shotsCount');
+    const generateBtn = document.getElementById('generateBtn');
+    const resultsSection = document.getElementById('resultsSection');
+    const shotGrid = document.getElementById('shotGrid');
+    const loadingState = document.getElementById('loadingState');
+    const errorMessage = document.getElementById('errorMessage');
+    const emptyState = document.getElementById('emptyState');
+    const copyBtn = document.getElementById('copyBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const newBtn = document.getElementById('newBtn');
+    const charCount = document.getElementById('charCount');
+
+    // Load saved API key
+    try {
+      const saved = localStorage.getItem('df_api_key');
+      if (saved) apiKeyInput.value = saved;
+    } catch(e) {}
+
+    // Char count
+    conceptInput.addEventListener('input', () => {
+      charCount.textContent = conceptInput.value.length;
+    });
+
+    // Example chips
+    document.querySelectorAll('.example-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        conceptInput.value = chip.dataset.example;
+        charCount.textContent = conceptInput.value.length;
+        conceptInput.focus();
+      });
+    });
+
+    // API key auto-save
+    apiKeyInput.addEventListener('change', () => {
+      try { localStorage.setItem('df_api_key', apiKeyInput.value); } catch(e) {}
+    });
+
+    // Generate
+    generateBtn.addEventListener('click', generateShots);
+
+    async function generateShots() {
+      const concept = conceptInput.value.trim();
+      const apiKey = apiKeyInput.value.trim();
+      const count = parseInt(shotsCount.value);
+
+      // Usage check
+      if (!canGenerate()) {
+        showError('⚠️ 免费版每月仅限生成 5 份镜头规划。请升级到专业版获取无限使用！');
+        return;
+      }
+
+      if (!concept) {
+        showError('请先描述你的电影概念');
+        return;
+      }
+      if (!apiKey) {
+        showError('请输入你的 DeepSeek API 密钥');
+        return;
+      }
+
+      generateBtn.disabled = true;
+      generateBtn.textContent = '⏳ 生成中...';
+      resultsSection.classList.remove('active');
+      loadingState.classList.add('active');
+      errorMessage.classList.remove('active');
+      emptyState.style.display = 'none';
+
+      const systemPrompt = `你是一位专业的电影导演和摄影指导。根据给定的电影概念，创建一份详细的逐镜头分解方案。
+
+仅输出 JSON 数组（不要 markdown 标记，不要解释说明）。每个对象格式：
+{
+  "shot": 1,
+  "title": "镜头标题（中文）",
+  "duration": "3s",
+  "camera": "Wide shot / Close-up / 等",
+  "lighting": "Golden hour / Low key / 等",
+  "mood": "Tense / Joyful / 等（中文情绪描述）",
+  "description": "镜头中发生的内容、视觉构图（中文描述）",
+  "prompt": "完整的 AI 图像生成提示词（英文，包含摄影机、灯光、情绪和主体细节，适合 Midjourney / Stable Diffusion）"
+}
+
+规则：
+- 每个镜头必须有独特的摄影机角度、时长和递进关系
+- 从建立镜头开始，过渡到中景，再到特写
+- 以总结性镜头结束
+- 提示词必须足够详细，适合 AI 图像生成（电影风格）
+- 在描述中包含镜头转场方式
+- 生成恰好 ${count} 个镜头
+- 使用双引号，内部双引号需要用反斜杠转义
+- 标题(title)和描述(description)用中文，提示词(prompt)用英文
+- 描述要生动有电影感，体现画面构图和情绪`;
+
+      try {
+        const response = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + apiKey
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: '为以下概念创建一个 ' + count + ' 镜头分解方案：' + concept }
+            ],
+            temperature: 0.8,
+            max_tokens: 4096
+          })
+        });
+
+        if (!response.ok) {
+          const err = await response.text();
+          throw new Error('API 错误 (' + response.status + '): ' + err);
+        }
+
+        const data = await response.json();
+        const content = data.choices[0].message.content;
+
+        // Parse JSON from response
+        let shots;
+        try {
+          shots = JSON.parse(content);
+        } catch(e) {
+          const jsonMatch = content.match(/\`\`\`(?:json)?\s*([\s\S]*?)\`\`\`/);
+          if (jsonMatch) {
+            shots = JSON.parse(jsonMatch[1]);
+          } else {
+            const arrMatch = content.match(/\[[\s\S]*\]/);
+            if (arrMatch) {
+              shots = JSON.parse(arrMatch[0]);
+            } else {
+              throw new Error('无法从 API 响应中解析镜头数据');
+            }
+          }
+        }
+
+        currentShots = shots;
+        renderShots(shots);
+        resultsSection.classList.add('active');
+        loadingState.classList.remove('active');
+        incrementUsage();
+
+      } catch (error) {
+        loadingState.classList.remove('active');
+        showError(error.message);
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = '✨ 生成镜头分解';
+        updateUI();
+      }
+    }
+
+    // ── Render ──
+    function renderShots(shots) {
+      shotGrid.innerHTML = '';
+      shots.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'shot-card';
+
+        const header = document.createElement('div');
+        header.className = 'shot-header';
+        header.innerHTML =
+          '<span class="shot-number">镜头 ' + (s.shot || s.shot_number || '-') + '</span>' +
+          '<span class="shot-duration">' + (s.duration || s.duration_seconds || '') + '</span>';
+
+        const title = document.createElement('div');
+        title.className = 'shot-title';
+        title.textContent = s.title || '';
+
+        const meta = document.createElement('div');
+        meta.className = 'shot-meta';
+        if (s.camera) meta.innerHTML += '<span class="tag camera">📷 ' + s.camera + '</span>';
+        if (s.lighting) meta.innerHTML += '<span class="tag lighting">💡 ' + s.lighting + '</span>';
+        if (s.mood) meta.innerHTML += '<span class="tag mood">🎭 ' + s.mood + '</span>';
+
+        const desc = document.createElement('div');
+        desc.className = 'shot-description';
+        desc.textContent = s.description || s.action || '';
+
+        const promptEl = document.createElement('div');
+        promptEl.className = 'shot-prompt';
+        promptEl.textContent = s.prompt || '';
+
+        card.appendChild(header);
+        card.appendChild(title);
+        card.appendChild(meta);
+        card.appendChild(desc);
+        if (s.prompt) card.appendChild(promptEl);
+        shotGrid.appendChild(card);
+      });
+    }
+
+    // ── Copy all ──
+    copyBtn.addEventListener('click', () => {
+      const text = currentShots.map(s =>
+        '镜头 ' + (s.shot || s.shot_number || '-') + ' | ' + (s.title || '') + ' | ' + (s.duration || '') + '\n' +
+        '摄影: ' + (s.camera || '') + ' | 灯光: ' + (s.lighting || '') + ' | 情绪: ' + (s.mood || '') + '\n' +
+        (s.description || '') + '\n' +
+        (s.prompt ? '提示词: ' + s.prompt + '\n' : '') +
+        '---'
+      ).join('\n\n');
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('已复制到剪贴板！');
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制到剪贴板！');
+      });
+    });
+
+    // ── Export Markdown ──
+    exportBtn.addEventListener('click', () => {
+      let md = '# 镜头分解方案\n\n';
+      currentShots.forEach(s => {
+        md += '## 镜头 ' + (s.shot || s.shot_number || '-') + ': ' + (s.title || '') + '\n\n';
+        md += '- **时长:** ' + (s.duration || '') + '\n';
+        md += '- **摄影:** ' + (s.camera || '') + '\n';
+        md += '- **灯光:** ' + (s.lighting || '') + '\n';
+        md += '- **情绪:** ' + (s.mood || '') + '\n\n';
+        md += (s.description || '') + '\n\n';
+        if (s.prompt) {
+          md += '```\n' + s.prompt + '\n```\n\n';
+        }
+        md += '---\n\n';
+      });
+
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'shot-breakdown-' + new Date().toISOString().slice(0,10) + '.md';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Markdown 已导出！');
+    });
+
+    // ── New ──
+    newBtn.addEventListener('click', () => {
+      resultsSection.classList.remove('active');
+      emptyState.style.display = 'block';
+      shotGrid.innerHTML = '';
+      currentShots = [];
+      conceptInput.focus();
+      window.scrollTo({ top: document.getElementById('app').offsetTop - 80, behavior: 'smooth' });
+    });
+
+    // ── Helpers ──
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      errorMessage.classList.add('active');
+      loadingState.classList.remove('active');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('active');
+      setTimeout(() => toast.classList.remove('active'), 3000);
+    }
+
+    // ── Enter key shortcut ──
+    conceptInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.metaKey) {
+        generateShots();
+      }
+    });
+
+    // ── License modal link in footer ──
+    document.getElementById('enterLicenseLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('licenseModal').classList.add('active');
+    });
+
+    // Close modal on overlay click
+    document.getElementById('licenseModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('licenseModal')) {
+        closeLicenseModal();
+      }
+    });
+
+    // Enter key in license input
+    document.getElementById('licenseKeyInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') verifyLicenseKey();
+    });
+
+    // ── Init ──
+    checkUrlParams();
+    updateUI();
+
+    // If usage resets on month change, show it
+    console.log('AI 电影镜头规划器 v2.0 SaaS 已加载');
+    console.log('当前方案:', getLicenseTier());
+    console.log('本月使用:', getUsageCount());
+  </script>
+</body>
+</html>
