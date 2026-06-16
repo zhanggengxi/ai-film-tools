@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>产能看板 · AI Film Tools</title>
+  <style>
+    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0b;
+      --surface: #141416;
+      --surface-2: #1c1c1f;
+      --surface-3: #252529;
+      --border: #2a2a2e;
+      --border-light: #3a3a3e;
+      --text: #f4f4f5;
+      --text-2: #a1a1aa;
+      --text-3: #71717a;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --accent-subtle: rgba(99,102,241,0.1);
+      --green: #22c55e;
+      --green-bg: rgba(34,197,94,0.12);
+      --amber: #eab308;
+      --amber-bg: rgba(234,179,8,0.12);
+      --red: #ef4444;
+      --red-bg: rgba(239,68,68,0.12);
+      --blue: #38bdf8;
+      --blue-bg: rgba(56,189,248,0.12);
+      --purple: #a78bfa;
+      --gradient: linear-gradient(135deg,#6366f1,#a855f7,#ec4899);
+      --gradient-2: linear-gradient(135deg,#6366f1,#8b5cf6);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 16px;
+    }
+    html { font-size: 16px; }
+    body {
+      font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','Inter','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; padding: 24px;
+    }
+
+    /* ── Header ── */
+    .dashboard-header {
+      max-width: 1400px; margin: 0 auto 28px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    }
+    .dashboard-header h1 {
+      font-size: 26px; font-weight: 800;
+      background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .dashboard-header .update-time {
+      font-size: 13px; color: var(--text-3);
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: 20px;
+    }
+    .dashboard-header .update-time span { color: var(--text-2); font-weight: 600; }
+
+    /* ── Grid Layout ── */
+    .dashboard-grid {
+      max-width: 1400px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    }
+    @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 24px;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--border-light); }
+    .card-full { grid-column: 1 / -1; }
+
+    .card-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+      padding-bottom: 14px; border-bottom: 1px solid var(--border);
+    }
+    .card-header .icon { font-size: 22px; }
+    .card-header h2 { font-size: 17px; font-weight: 700; flex: 1; }
+    .card-header .badge {
+      font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px;
+      background: var(--accent-subtle); color: var(--accent);
+    }
+
+    /* ── Stat Row ── */
+    .stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    .stat-box {
+      flex: 1; min-width: 100px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; text-align: center;
+    }
+    .stat-box .num { font-size: 28px; font-weight: 800; line-height: 1.1; }
+    .stat-box .num.green { color: var(--green); }
+    .stat-box .num.amber { color: var(--amber); }
+    .stat-box .num.accent { color: var(--accent); }
+    .stat-box .num.blue { color: var(--blue); }
+    .stat-box .num.purple { color: var(--purple); }
+    .stat-box .label { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+
+    /* ── Category List ── */
+    .cat-list { list-style: none; }
+    .cat-list li {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); margin-bottom: 8px;
+      background: var(--surface-2); font-size: 14px;
+    }
+    .cat-list li:last-child { margin-bottom: 0; }
+    .cat-list .cat-name { display: flex; align-items: center; gap: 8px; }
+    .cat-list .cat-count {
+      font-weight: 700; color: var(--accent);
+      background: var(--accent-subtle); padding: 2px 10px; border-radius: 10px; font-size: 13px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    /* ── Tool Table ── */
+    .tool-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .tool-table th {
+      text-align: left; font-size: 12px; font-weight: 600; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 8px 12px 8px 0; border-bottom: 1px solid var(--border);
+    }
+    .tool-table td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--border); }
+    .tool-table tr:last-child td { border-bottom: none; }
+    .status-tag {
+      display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 10px;
+    }
+    .status-tag.stable { background: var(--green-bg); color: var(--green); }
+    .status-tag.live { background: var(--blue-bg); color: var(--blue); }
+    .status-tag.dev { background: var(--amber-bg); color: var(--amber); }
+    .status-tag.plan { background: rgba(161,161,170,0.12); color: var(--text-2); }
+
+    /* ── Daily Output Table ── */
+    .output-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .output-table th {
+      text-align: left; font-size: 12px; font-weight: 600; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 8px 12px 8px 0; border-bottom: 1px solid var(--border);
+    }
+    .output-table td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--border); }
+    .output-table tr:last-child td { border-bottom: none; }
+    .output-table .type-badge {
+      display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px;
+    }
+    .type-badge.blog { background: var(--accent-subtle); color: var(--accent); }
+    .type-badge.code { background: var(--green-bg); color: var(--green); }
+    .type-badge.ops { background: var(--amber-bg); color: var(--amber); }
+
+    /* ── Sponsor Cards ── */
+    .sponsor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+    .sponsor-item {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; text-align: center;
+      transition: all 0.2s;
+    }
+    .sponsor-item:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .sponsor-item .s-icon { font-size: 28px; margin-bottom: 8px; }
+    .sponsor-item .s-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .sponsor-item .s-status {
+      font-size: 12px; padding: 2px 10px; border-radius: 10px; display: inline-block;
+    }
+    .s-status.active { background: var(--green-bg); color: var(--green); }
+    .s-status.pending { background: var(--amber-bg); color: var(--amber); }
+    .s-status.inactive { background: var(--red-bg); color: var(--red); }
+
+    /* ── Revenue Row ── */
+    .revenue-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 16px; }
+    .revenue-item {
+      flex: 1; min-width: 140px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+    }
+    .revenue-item .r-icon { font-size: 24px; }
+    .revenue-item .r-info { flex: 1; }
+    .revenue-item .r-label { font-size: 12px; color: var(--text-3); }
+    .revenue-item .r-amount { font-size: 18px; font-weight: 700; }
+    .revenue-item .r-amount.green { color: var(--green); }
+    .revenue-item .r-amount.amber { color: var(--amber); }
+
+    hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-header">
+  <h1>📊 AI Film Tools · 产能看板</h1>
+  <div class="update-time">🔄 更新于 <span id="updateTime"></span></div>
+</div>
+
+<div class="dashboard-grid">
+
+  <!-- ──── CARD 1: Blog Statistics ──── -->
+  <div class="card card-full">
+    <div class="card-header">
+      <span class="icon">📝</span>
+      <h2>博客文章统计</h2>
+      <span class="badge">总 15 篇</span>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="num accent">15</div>
+        <div class="label">总文章数</div>
+      </div>
+      <div class="stat-box">
+        <div class="num green">15</div>
+        <div class="label">本周新增</div>
+      </div>
+      <div class="stat-box">
+        <div class="num blue">12.8K</div>
+        <div class="label">预计总阅读 (估算)</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 8px;">
+      <h3 style="font-size: 14px; color: var(--text-2); margin-bottom: 10px;">📂 各分类数量</h3>
+      <ul class="cat-list">
+        <li>
+          <span class="cat-name"><span class="dot" style="background:var(--green)"></span> 对比 · Reviews</span>
+          <span class="cat-count">3</span>
+        </li>
+        <li>
+          <span class="cat-name"><span class="dot" style="background:var(--blue)"></span> 趋势 · Trends</span>
+          <span class="cat-count">3</span>
+        </li>
+        <li>
+          <span class="cat-name"><span class="dot" style="background:var(--purple)"></span> 技巧 · Tips</span>
+          <span class="cat-count">3</span>
+        </li>
+        <li>
+          <span class="cat-name"><span class="dot" style="background:var(--amber)"></span> 教程 · Tutorials</span>
+          <span class="cat-count">3</span>
+        </li>
+        <li>
+          <span class="cat-name"><span class="dot" style="background:var(--accent)"></span> 入门指南 · Beginner Guide</span>
+          <span class="cat-count">3</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ──── CARD 2: Tool List & Status ──── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">🧰</span>
+      <h2>工具列表与状态</h2>
+      <span class="badge">6 款工具</span>
+    </div>
+    <table class="tool-table">
+      <thead>
+        <tr><th>工具</th><th>状态</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>🎥 AI Film Shot Planner</td>
+          <td><span class="status-tag stable">✅ Stable</span></td>
+        </tr>
+        <tr>
+          <td>📝 AI Tool Reviews &amp; Blog</td>
+          <td><span class="status-tag live">✅ Live</span></td>
+        </tr>
+        <tr>
+          <td>🤖 Prompt Generator</td>
+          <td><span class="status-tag dev">🔧 In Dev</span></td>
+        </tr>
+        <tr>
+          <td>📋 Production Workflow</td>
+          <td><span class="status-tag plan">📝 Planning</span></td>
+        </tr>
+        <tr>
+          <td>🎭 Character Consistency</td>
+          <td><span class="status-tag plan">📝 Planning</span></td>
+        </tr>
+        <tr>
+          <td>⚙️ Pipeline Integrations</td>
+          <td><span class="status-tag dev">🔧 In Dev</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="stat-row" style="margin-top: 16px; margin-bottom: 0;">
+      <div class="stat-box">
+        <div class="num green">2</div>
+        <div class="label">已上线</div>
+      </div>
+      <div class="stat-box">
+        <div class="num amber">2</div>
+        <div class="label">开发中</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color: var(--text-2);">2</div>
+        <div class="label">规划中</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──── CARD 3: Daily Output ──── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">📅</span>
+      <h2>每日产出记录</h2>
+      <span class="badge">本周</span>
+    </div>
+    <table class="output-table">
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>类型</th>
+          <th>内容</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color: var(--text-2); font-size: 13px; white-space: nowrap;">06-16</td>
+          <td><span class="type-badge blog">博客</span></td>
+          <td>发布 15 篇 AI 影视工具博客</td>
+        </tr>
+        <tr>
+          <td style="color: var(--text-2); font-size: 13px; white-space: nowrap;">06-16</td>
+          <td><span class="type-badge code">代码</span></td>
+          <td>生成看板 dashboard</td>
+        </tr>
+        <tr>
+          <td style="color: var(--text-2); font-size: 13px; white-space: nowrap;">06-16</td>
+          <td><span class="type-badge ops">运营</span></td>
+          <td>GitHub Pages 部署更新</td>
+        </tr>
+        <tr>
+          <td style="color: var(--text-2); font-size: 13px; white-space: nowrap;">06-15</td>
+          <td><span class="type-badge code">代码</span></td>
+          <td>affiliate-generator.py 脚本优化</td>
+        </tr>
+        <tr>
+          <td style="color: var(--text-2); font-size: 13px; white-space: nowrap;">06-14</td>
+          <td><span class="type-badge blog">博客</span></td>
+          <td>内容规划与分类整理</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top: 14px; display: flex; gap: 12px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2);">
+        <span style="font-size: 18px;">📄</span> 本周产出 <strong style="color: var(--text);">18 项</strong>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2);">
+        <span style="font-size: 18px;">✍️</span> 博客 <strong style="color: var(--accent);">16</strong>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2);">
+        <span style="font-size: 18px;">💻</span> 代码 <strong style="color: var(--green);">2</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──── CARD 4: Sponsorship & Revenue ──── -->
+  <div class="card card-full">
+    <div class="card-header">
+      <span class="icon">💰</span>
+      <h2>赞助 / 收益状态</h2>
+      <span class="badge">多渠道运营</span>
+    </div>
+
+    <h3 style="font-size: 14px; color: var(--text-2); margin-bottom: 12px;">🔗 赞助渠道</h3>
+    <div class="sponsor-grid">
+      <div class="sponsor-item">
+        <div class="s-icon">🌟</div>
+        <div class="s-name">GitHub Sponsors</div>
+        <span class="s-status active">🟢 Active</span>
+      </div>
+      <div class="sponsor-item">
+        <div class="s-icon">☕</div>
+        <div class="s-name">Buy Me a Coffee</div>
+        <span class="s-status active">🟢 Active</span>
+      </div>
+      <div class="sponsor-item">
+        <div class="s-icon">⚡</div>
+        <div class="s-name">爱发电</div>
+        <span class="s-status active">🟢 Active</span>
+      </div>
+      <div class="sponsor-item">
+        <div class="s-icon">📦</div>
+        <div class="s-name">Gumroad Store</div>
+        <span class="s-status active">🟢 Active</span>
+      </div>
+    </div>
+
+    <hr>
+
+    <h3 style="font-size: 14px; color: var(--text-2); margin-bottom: 12px;">🛒 付费产品 (Gumroad)</h3>
+    <div class="stat-row" style="margin-bottom: 0;">
+      <div class="stat-box">
+        <div class="num purple">3</div>
+        <div class="label">在售产品</div>
+      </div>
+      <div class="stat-box">
+        <div class="num blue">—</div>
+        <div class="label">本月销量</div>
+      </div>
+      <div class="stat-box">
+        <div class="num green">—</div>
+        <div class="label">总收入</div>
+      </div>
+    </div>
+    <ul class="cat-list" style="margin-top: 12px;">
+      <li>
+        <span class="cat-name">🎬 Cinematic Prompt Pack</span>
+        <span style="font-size: 12px; color: var(--text-3);">$19 · 🔗 <a href="https://gengxi.gumroad.com/l/nxowt" style="color: var(--accent);">gumroad</a></span>
+      </li>
+      <li>
+        <span class="cat-name">👤 Character Consistency System</span>
+        <span style="font-size: 12px; color: var(--text-3);">$29 · 🔗 <a href="https://gengxi.gumroad.com/l/wjboz" style="color: var(--accent);">gumroad</a></span>
+      </li>
+      <li>
+        <span class="cat-name">🎥 AI Production Workflow</span>
+        <span style="font-size: 12px; color: var(--text-3);">$39 · 🔗 <a href="https://gengxi.gumroad.com/l/aconvu" style="color: var(--accent);">gumroad</a></span>
+      </li>
+    </ul>
+
+    <hr>
+
+    <h3 style="font-size: 14px; color: var(--text-2); margin-bottom: 12px;">💵 收益概览</h3>
+    <div class="revenue-row">
+      <div class="revenue-item">
+        <span class="r-icon">🌟</span>
+        <div class="r-info">
+          <div class="r-label">GitHub Sponsors</div>
+          <div class="r-amount amber">$0 /月</div>
+        </div>
+      </div>
+      <div class="revenue-item">
+        <span class="r-icon">☕</span>
+        <div class="r-info">
+          <div class="r-label">Buy Me a Coffee</div>
+          <div class="r-amount amber">$0</div>
+        </div>
+      </div>
+      <div class="revenue-item">
+        <span class="r-icon">📦</span>
+        <div class="r-info">
+          <div class="r-label">Gumroad 预估</div>
+          <div class="r-amount amber">$0</div>
+        </div>
+      </div>
+      <div class="revenue-item">
+        <span class="r-icon">⚡</span>
+        <div class="r-info">
+          <div class="r-label">爱发电</div>
+          <div class="r-amount amber">¥0</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: 12px; font-size: 13px; color: var(--text-3); text-align: center;">
+      💡 项目初期，收益数据会在接入支付 API 后自动更新
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('updateTime').textContent = new Date().toLocaleString('zh-CN', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit'
+  });
+</script>
+
+</body>
+</html>

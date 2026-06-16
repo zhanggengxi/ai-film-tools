@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 分镜脚本生成器 — 完整分镜表 | AI Film Tools</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0a0a0b;--surface:#141416;--surface-2:#1c1c1f;--surface-3:#252529;
+      --border:#2a2a2e;--border-light:#3a3a3e;--text:#f4f4f5;--text-2:#a1a1aa;--text-3:#71717a;
+      --accent:#6366f1;--accent-hover:#818cf8;--accent-subtle:rgba(99,102,241,0.1);--accent-glow:rgba(99,102,241,0.25);
+      --green:#22c55e;--green-subtle:rgba(34,197,94,0.1);--amber:#eab308;--amber-subtle:rgba(234,179,8,0.1);
+      --red:#ef4444;--gradient:linear-gradient(135deg,#6366f1,#a855f7,#ec4899);--gradient-2:linear-gradient(135deg,#6366f1,#8b5cf6);
+      --radius:12px;--radius-sm:8px;--radius-lg:16px;--max-width:1200px
+    }
+    html{font-size:16px;scroll-behavior:smooth}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Inter','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+      background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh
+    }
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:3px}
+
+    .header{
+      position:fixed;top:0;left:0;right:0;height:56px;
+      background:rgba(20,20,22,0.85);backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
+      padding:0 24px;z-index:1000
+    }
+    .header .logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700}
+    .header .logo-icon{width:28px;height:28px;background:var(--gradient);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+    .header nav{display:flex;gap:4px;align-items:center}
+    .header nav a{color:var(--text-2);font-size:13px;font-weight:500;padding:6px 12px;border-radius:var(--radius-sm);transition:all .2s;text-decoration:none}
+    .header nav a:hover{color:var(--text);background:var(--surface-2)}
+    .header nav a.active{color:var(--accent);background:var(--accent-subtle)}
+
+    .main{padding:80px 24px 40px;max-width:var(--max-width);margin:0 auto}
+    .page-title{font-size:28px;font-weight:800;margin-bottom:4px}
+    .page-desc{color:var(--text-2);font-size:15px;margin-bottom:28px}
+
+    .settings-bar{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:16px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px
+    }
+    .settings-bar label{font-size:12px;color:var(--text-3);font-weight:600;white-space:nowrap}
+    .settings-bar input,.settings-bar select{
+      background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+      color:var(--text);padding:7px 12px;font-size:13px;outline:none;transition:border-color .2s
+    }
+    .settings-bar input:focus,.settings-bar select:focus{border-color:var(--accent)}
+    .settings-bar input[type="text"]{min-width:140px;flex:1}
+    .settings-bar select{min-width:110px}
+    .settings-toggle{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:13px;padding:6px 10px;border-radius:var(--radius-sm);transition:all .2s}
+    .settings-toggle:hover{color:var(--text);background:var(--surface-2)}
+
+    .extra-settings{display:none;margin-top:12px;padding:12px 16px;background:var(--surface-2);border-radius:var(--radius-sm);gap:12px;flex-wrap:wrap;align-items:center}
+    .extra-settings.open{display:flex}
+    .extra-settings label{font-size:12px;color:var(--text-3);font-weight:600;white-space:nowrap}
+    .extra-settings input{background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:6px 10px;font-size:13px;outline:none;transition:border-color .2s}
+    .extra-settings input:focus{border-color:var(--accent)}
+    .extra-settings input[type="text"]{min-width:180px;flex:1}
+
+    .input-section{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:20px;margin-bottom:20px
+    }
+    .input-section textarea{
+      width:100%;min-height:140px;background:var(--surface-2);border:1px solid var(--border);
+      border-radius:var(--radius-sm);color:var(--text);padding:14px;font-size:14px;line-height:1.7;
+      resize:vertical;outline:none;transition:border-color .2s;font-family:inherit
+    }
+    .input-section textarea:focus{border-color:var(--accent)}
+    .input-section textarea::placeholder{color:var(--text-3)}
+    .input-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:10px}
+    .char-count{font-size:12px;color:var(--text-3)}
+    .btn-group{display:flex;gap:8px;flex-wrap:wrap}
+
+    .btn{
+      display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:var(--radius-sm);
+      font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .2s;white-space:nowrap
+    }
+    .btn-primary{background:var(--gradient-2);color:#fff}
+    .btn-primary:hover{opacity:.9;box-shadow:0 0 24px var(--accent-glow)}
+    .btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+    .btn-secondary{background:var(--surface-2);color:var(--text);border:1px solid var(--border)}
+    .btn-secondary:hover{background:var(--surface-3);border-color:var(--border-light)}
+    .btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border)}
+    .btn-ghost:hover{color:var(--text);background:var(--surface-2)}
+    .btn-sm{padding:6px 14px;font-size:12px}
+
+    .examples{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+    .example-chip{
+      background:var(--surface-2);border:1px solid var(--border);border-radius:20px;
+      padding:4px 14px;font-size:12px;color:var(--text-2);cursor:pointer;transition:all .2s
+    }
+    .example-chip:hover{background:var(--surface-3);border-color:var(--accent);color:var(--accent)}
+
+    .loading-state{display:none;text-align:center;padding:48px 20px}
+    .loading-state.active{display:block}
+    .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-state p{color:var(--text-2);font-size:14px}
+
+    .error-message{display:none;background:var(--red);color:#fff;padding:12px 18px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:14px}
+    .error-message.active{display:block}
+
+    .results-section{display:none}
+    .results-section.active{display:block}
+    .results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+    .results-header h2{font-size:18px;font-weight:700}
+    .results-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* Storyboard Table */
+    .storyboard-table-wrap{overflow-x:auto;margin-bottom:24px}
+    .storyboard-table{
+      width:100%;border-collapse:separate;border-spacing:0;
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden
+    }
+    .storyboard-table thead th{
+      background:var(--surface-2);padding:10px 12px;font-size:12px;font-weight:700;color:var(--text-2);
+      text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.3px
+    }
+    .storyboard-table tbody td{
+      padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text)
+    }
+    .storyboard-table tbody tr:last-child td{border-bottom:none}
+    .storyboard-table tbody tr:hover td{background:var(--surface-2)}
+    .storyboard-table .shot-num{text-align:center;font-weight:700;color:var(--accent);white-space:nowrap}
+    .storyboard-table .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;background:var(--surface-2);color:var(--text-2);margin:1px 2px;white-space:nowrap;border:1px solid var(--border)}
+    .storyboard-table .tag.accent{background:var(--accent-subtle);color:var(--accent);border-color:rgba(99,102,241,0.2)}
+    .storyboard-table .tag.green{background:var(--green-subtle);color:var(--green);border-color:rgba(34,197,94,0.2)}
+    .storyboard-table .tag.amber{background:var(--amber-subtle);color:var(--amber);border-color:rgba(234,179,8,0.2)}
+    .storyboard-table .prompt-cell{font-size:12px;color:var(--text-2);line-height:1.6;max-width:300px}
+    .storyboard-table .copy-cell-btn{
+      background:var(--surface-2);border:1px solid var(--border);border-radius:4px;
+      color:var(--text-3);cursor:pointer;padding:2px 8px;font-size:10px;transition:all .2s;float:right
+    }
+    .storyboard-table .copy-cell-btn:hover{color:var(--accent);border-color:var(--accent)}
+
+    /* Summary */
+    .shot-summary{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:16px 20px;margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap
+    }
+    .shot-summary-item{text-align:center}
+    .shot-summary-item .num{font-size:24px;font-weight:800;color:var(--accent)}
+    .shot-summary-item .label{font-size:12px;color:var(--text-3);margin-top:2px}
+
+    .toast{
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface-3);
+      border:1px solid var(--border);color:var(--text);padding:10px 24px;border-radius:var(--radius-sm);
+      font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none
+    }
+    .toast.active{opacity:1}
+
+    @media(max-width:768px){
+      .settings-bar{flex-direction:column;align-items:stretch}
+      .settings-bar input[type="text"]{min-width:0;width:100%}
+      .extra-settings{flex-direction:column;align-items:stretch}
+      .extra-settings input[type="text"]{width:100%}
+      .main{padding:76px 16px 30px}
+      .page-title{font-size:22px}
+      .input-section textarea{min-height:100px}
+      .storyboard-table{font-size:12px}
+      .storyboard-table thead th,.storyboard-table tbody td{padding:8px}
+      .shot-summary{gap:16px}
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo"><span class="logo-icon">🎬</span> AI Film Tools</div>
+  <nav>
+    <a href="prompt-generator.html">提示词</a>
+    <a href="storyboard-generator.html" class="active">分镜</a>
+    <a href="character-generator.html">角色</a>
+  </nav>
+</header>
+
+<div class="main">
+  <h1 class="page-title">📋 AI 分镜脚本生成器</h1>
+  <p class="page-desc">输入剧情描述，AI 将自动生成完整的分镜脚本表，包含镜头编号、景别、运镜、时长、画面描述和 AI 提示词</p>
+
+  <div class="settings-bar">
+    <label for="apiKey">API Key</label>
+    <input type="text" id="apiKey" placeholder="sk-... 输入你的 API 密钥" value="">
+    <button class="settings-toggle" id="settingsToggle">⚙️ 更多设置</button>
+  </div>
+  <div class="extra-settings" id="extraSettings">
+    <label for="apiBase">API 地址</label>
+    <input type="text" id="apiBase" placeholder="https://api.deepseek.com" value="https://api.deepseek.com">
+    <label for="modelName">模型</label>
+    <input type="text" id="modelName" placeholder="deepseek-chat" value="deepseek-chat">
+    <label for="shotCount">分镜数</label>
+    <select id="shotCount">
+      <option value="5">5 个镜头</option>
+      <option value="8" selected>8 个镜头</option>
+      <option value="10">10 个镜头</option>
+      <option value="12">12 个镜头</option>
+    </select>
+  </div>
+
+  <div class="input-section">
+    <div class="examples">
+      <span class="example-chip" data-example="一名特工潜入地下实验室窃取机密文件，被发现后展开激烈枪战，最终乘坐直升机逃离">🔫 特工行动</span>
+      <span class="example-chip" data-example="女孩在毕业典礼上鼓起勇气向暗恋对象表白，得到意外回应后喜极而泣">💕 青春告白</span>
+      <span class="example-chip" data-example="将军率军与敌军在雪原决战，利用地形设伏包围敌人，最终获得惨胜">⚔️ 雪原决战</span>
+      <span class="example-chip" data-example="小行星即将撞击地球，一支精英小队乘坐飞船前往拦截，在最后关头成功引爆">🚀 拯救地球</span>
+    </div>
+    <textarea id="storyInput" placeholder="输入你的剧情描述...&#10;例如：深夜，一名私家侦探在昏暗的办公室里翻看旧档案。他接到一个匿名电话，约他在码头见面。他犹豫片刻，披上大衣出门。雨夜中，他来到空无一人的码头，发现一个神秘的箱子..."></textarea>
+    <div class="input-footer">
+      <span class="char-count" id="charCount">0</span>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="generateBtn">🎬 生成分镜脚本</button>
+        <button class="btn btn-ghost btn-sm" id="clearBtn">清空</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="error-message" id="errorMessage"></div>
+
+  <div class="loading-state" id="loadingState">
+    <div class="spinner"></div>
+    <p>🎥 AI 正在分析剧情，构建分镜脚本...</p>
+  </div>
+
+  <div class="results-section" id="resultsSection">
+    <div class="results-header">
+      <h2>📄 分镜脚本</h2>
+      <div class="results-actions">
+        <button class="btn btn-secondary btn-sm" id="copyAllBtn">📋 复制全部</button>
+        <button class="btn btn-secondary btn-sm" id="exportBtn">📥 导出 CSV</button>
+        <button class="btn btn-ghost btn-sm" id="newBtn">🔄 重新生成</button>
+      </div>
+    </div>
+    <div class="shot-summary" id="shotSummary"></div>
+    <div class="storyboard-table-wrap">
+      <table class="storyboard-table" id="storyboardTable">
+        <thead>
+          <tr>
+            <th style="width:48px">镜号</th>
+            <th style="width:80px">景别</th>
+            <th style="width:80px">运镜</th>
+            <th style="width:60px">时长</th>
+            <th style="min-width:150px">画面描述</th>
+            <th>对白/音效</th>
+            <th style="min-width:180px">AI 提示词</th>
+          </tr>
+        </thead>
+        <tbody id="storyboardBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  const apiKeyInput = document.getElementById('apiKey');
+  const apiBaseInput = document.getElementById('apiBase');
+  const modelNameInput = document.getElementById('modelName');
+  const storyInput = document.getElementById('storyInput');
+  const shotCount = document.getElementById('shotCount');
+  const generateBtn = document.getElementById('generateBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const errorMessage = document.getElementById('errorMessage');
+  const loadingState = document.getElementById('loadingState');
+  const resultsSection = document.getElementById('resultsSection');
+  const storyboardBody = document.getElementById('storyboardBody');
+  const shotSummary = document.getElementById('shotSummary');
+  const copyAllBtn = document.getElementById('copyAllBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const newBtn = document.getElementById('newBtn');
+  const charCount = document.getElementById('charCount');
+  const toast = document.getElementById('toast');
+  const settingsToggle = document.getElementById('settingsToggle');
+  const extraSettings = document.getElementById('extraSettings');
+
+  let currentShots = [];
+
+  try {
+    const savedKey = localStorage.getItem('af_api_key');
+    if (savedKey) apiKeyInput.value = savedKey;
+    const savedBase = localStorage.getItem('af_api_base');
+    if (savedBase) apiBaseInput.value = savedBase;
+    const savedModel = localStorage.getItem('af_api_model');
+    if (savedModel) modelNameInput.value = savedModel;
+  } catch(e) {}
+
+  apiKeyInput.addEventListener('change', () => { try { localStorage.setItem('af_api_key', apiKeyInput.value); } catch(e) {} });
+  apiBaseInput.addEventListener('change', () => { try { localStorage.setItem('af_api_base', apiBaseInput.value); } catch(e) {} });
+  modelNameInput.addEventListener('change', () => { try { localStorage.setItem('af_api_model', modelNameInput.value); } catch(e) {} });
+
+  settingsToggle.addEventListener('click', () => {
+    extraSettings.classList.toggle('open');
+    settingsToggle.textContent = extraSettings.classList.contains('open') ? '🔽 收起设置' : '⚙️ 更多设置';
+  });
+
+  storyInput.addEventListener('input', () => { charCount.textContent = storyInput.value.length; });
+
+  document.querySelectorAll('.example-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      storyInput.value = chip.dataset.example;
+      charCount.textContent = storyInput.value.length;
+      storyInput.focus();
+    });
+  });
+
+  clearBtn.addEventListener('click', () => {
+    storyInput.value = '';
+    charCount.textContent = '0';
+    storyInput.focus();
+  });
+
+  generateBtn.addEventListener('click', generateStoryboard);
+  storyInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.metaKey) generateStoryboard();
+  });
+
+  async function generateStoryboard() {
+    const story = storyInput.value.trim();
+    const apiKey = apiKeyInput.value.trim();
+    const apiBase = apiBaseInput.value.trim() || 'https://api.deepseek.com';
+    const model = modelNameInput.value.trim() || 'deepseek-chat';
+    const count = parseInt(shotCount.value);
+
+    if (!story) { showError('请先输入剧情描述'); return; }
+    if (!apiKey) { showError('请输入你的 API 密钥'); return; }
+
+    generateBtn.disabled = true;
+    generateBtn.textContent = '⏳ 生成中...';
+    resultsSection.classList.remove('active');
+    loadingState.classList.add('active');
+    errorMessage.classList.remove('active');
+
+    const systemPrompt = `你是一位专业的电影分镜师（Storyboard Artist）。根据用户提供的剧情描述，生成一份完整的电影分镜脚本，包含 ${count} 个镜头。
+
+仅输出 JSON 数组（不要 markdown 标记，不要附加说明）。每个对象格式：
+{
+  "shot": 1,
+  "type": "景别（如：广角全景/中景/特写/过肩镜头/俯拍/仰拍/航拍/主观镜头）",
+  "movement": "运镜方式（如：固定镜头/平移/推近/拉远/跟拍/摇摄/升降/手持/斯坦尼康）",
+  "duration": "时长（如：3s/5s/8s）",
+  "description": "画面描述（中文，包含构图、人物位置、动作、视觉要素）",
+  "dialogue": "对白或音效提示（中文，如：\"紧张的背景音乐\" / \"角色A：我们没时间了\"；如无声可写\"环境音\"）",
+  "transition": "镜头转接（如：切/淡入淡出/溶解/划像/叠化）",
+  "prompt": "完整的 AI 图像生成提示词（英文，适合 Midjourney / Stable Diffusion，包含摄影机参数、光线、色调、氛围）"
+}
+
+规则：
+- 镜头编号从 1 开始递增
+- 从建立镜头（广角全景）开始，逐步过渡到中景和特写，最后以总结性镜头结束
+- 每个镜头的景别、运镜方式和时长应有所不同，体现节奏变化
+- 描述要生动、有电影感，包含视觉构图和情绪氛围
+- 提示词要足够详细，适合 AI 图像生成
+- 生成恰好 ${count} 个镜头
+- 使用双引号，内部双引号用反斜杠转义`;
+
+    try {
+      const response = await fetch(apiBase.replace(/\/+$/,'') + '/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: '剧情描述：' + story }
+          ],
+          temperature: 0.8,
+          max_tokens: 4096
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error('API 错误 (' + response.status + '): ' + err);
+      }
+
+      const data = await response.json();
+      const content = data.choices[0].message.content;
+
+      let shots;
+      try {
+        shots = JSON.parse(content);
+      } catch(e) {
+        const jsonMatch = content.match(/\`\`\`(?:json)?\s*([\s\S]*?)\`\`\`/);
+        if (jsonMatch) {
+          shots = JSON.parse(jsonMatch[1]);
+        } else {
+          const arrMatch = content.match(/\[[\s\S]*\]/);
+          if (arrMatch) {
+            shots = JSON.parse(arrMatch[0]);
+          } else {
+            throw new Error('无法从 API 响应中解析分镜数据');
+          }
+        }
+      }
+
+      currentShots = shots;
+      renderStoryboard(shots);
+      renderSummary(shots);
+      resultsSection.classList.add('active');
+      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast('✅ 已生成 ' + shots.length + ' 个镜头分镜');
+    } catch(err) {
+      showError('⚠️ ' + err.message);
+    } finally {
+      generateBtn.disabled = false;
+      generateBtn.textContent = '🎬 生成分镜脚本';
+      loadingState.classList.remove('active');
+    }
+  }
+
+  function renderStoryboard(shots) {
+    storyboardBody.innerHTML = '';
+    shots.forEach(s => {
+      const tr = document.createElement('tr');
+      const promptSafe = escapeAttr(s.prompt || '');
+      tr.innerHTML = `
+        <td class="shot-num">${s.shot}</td>
+        <td><span class="tag accent">${escapeHtml(s.type || '-')}</span></td>
+        <td><span class="tag">${escapeHtml(s.movement || '-')}</span></td>
+        <td><span class="tag green">${escapeHtml(s.duration || '-')}</span></td>
+        <td>
+          <strong>${escapeHtml(s.description || '')}</strong>
+          ${s.transition ? `<div style="margin-top:6px;font-size:11px;color:var(--text-3)">↪ 转场: ${escapeHtml(s.transition)}</div>` : ''}
+        </td>
+        <td style="font-size:13px;color:var(--text-2)">${escapeHtml(s.dialogue || '-')}</td>
+        <td>
+          <div class="prompt-cell">
+            <button class="copy-cell-btn" data-text="${promptSafe}">📋</button>
+            ${escapeHtml(s.prompt || '')}
+          </div>
+        </td>
+      `;
+      storyboardBody.appendChild(tr);
+    });
+
+    storyboardBody.querySelectorAll('.copy-cell-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(btn.dataset.text).then(() => {
+          showToast('📋 提示词已复制');
+        }).catch(() => {
+          const ta = document.createElement('textarea');
+          ta.value = btn.dataset.text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('📋 提示词已复制');
+        });
+      });
+    });
+  }
+
+  function renderSummary(shots) {
+    const total = shots.length;
+    const types = {};
+    const movements = {};
+    const durations = shots.map(s => parseInt(s.duration) || 0);
+    const totalDuration = durations.reduce((a, b) => a + b, 0);
+    shots.forEach(s => {
+      const t = s.type || '其他';
+      types[t] = (types[t] || 0) + 1;
+      const m = s.movement || '固定';
+      movements[m] = (movements[m] || 0) + 1;
+    });
+    const topType = Object.entries(types).sort((a,b) => b[1] - a[1])[0];
+    const topMove = Object.entries(movements).sort((a,b) => b[1] - a[1])[0];
+
+    shotSummary.innerHTML = `
+      <div class="shot-summary-item"><div class="num">${total}</div><div class="label">总镜头数</div></div>
+      <div class="shot-summary-item"><div class="num">${totalDuration}s</div><div class="label">预估总时长</div></div>
+      <div class="shot-summary-item"><div class="num">${topType ? topType[0] : '-'}</div><div class="label">主要景别</div></div>
+      <div class="shot-summary-item"><div class="num">${topMove ? topMove[0] : '-'}</div><div class="label">主要运镜</div></div>
+    `;
+  }
+
+  copyAllBtn.addEventListener('click', () => {
+    if (!currentShots.length) return;
+    const text = currentShots.map(s => {
+      return `【镜号 ${s.shot}】${s.type} | ${s.movement} | ${s.duration}\n画面：${s.description}\n对白：${s.dialogue || '-'}\n转场：${s.transition || '-'}\nPrompt：${s.prompt}\n`;
+    }).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('📋 全部分镜已复制');
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('📋 全部分镜已复制');
+    });
+  });
+
+  exportBtn.addEventListener('click', () => {
+    if (!currentShots.length) return;
+    const title = storyInput.value.trim().slice(0, 30);
+    // BOM for Excel UTF-8
+    let csv = '\uFEFF';
+    csv += '镜号,景别,运镜,时长,画面描述,对白/音效,转场,AI提示词\n';
+    currentShots.forEach(s => {
+      csv += `${s.shot},"${csvEscape(s.type || '')}","${csvEscape(s.movement || '')}","${csvEscape(s.duration || '')}","${csvEscape(s.description || '')}","${csvEscape(s.dialogue || '')}","${csvEscape(s.transition || '')}","${csvEscape(s.prompt || '')}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `分镜脚本-${title}-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📥 CSV 已导出');
+  });
+
+  newBtn.addEventListener('click', () => {
+    resultsSection.classList.remove('active');
+    storyboardBody.innerHTML = '';
+    shotSummary.innerHTML = '';
+    currentShots = [];
+    storyInput.focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  function showError(msg) {
+    errorMessage.textContent = msg;
+    errorMessage.classList.add('active');
+    loadingState.classList.remove('active');
+  }
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('active');
+    setTimeout(() => toast.classList.remove('active'), 3000);
+  }
+  function escapeHtml(str) {
+    if (!str) return '';
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+  function escapeAttr(str) {
+    if (!str) return '';
+    return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function csvEscape(str) {
+    if (!str) return '';
+    return str.replace(/"/g, '""');
+  }
+
+  console.log('📋 AI 分镜脚本生成器已加载');
+})();
+</script>
+</body>
+</html>

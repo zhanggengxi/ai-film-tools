@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 提示词生成器 — 电影级提示词 | AI Film Tools</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0a0a0b;--surface:#141416;--surface-2:#1c1c1f;--surface-3:#252529;
+      --border:#2a2a2e;--border-light:#3a3a3e;--text:#f4f4f5;--text-2:#a1a1aa;--text-3:#71717a;
+      --accent:#6366f1;--accent-hover:#818cf8;--accent-subtle:rgba(99,102,241,0.1);--accent-glow:rgba(99,102,241,0.25);
+      --green:#22c55e;--green-subtle:rgba(34,197,94,0.1);--amber:#eab308;--amber-subtle:rgba(234,179,8,0.1);
+      --red:#ef4444;--gradient:linear-gradient(135deg,#6366f1,#a855f7,#ec4899);--gradient-2:linear-gradient(135deg,#6366f1,#8b5cf6);
+      --radius:12px;--radius-sm:8px;--radius-lg:16px;--max-width:960px
+    }
+    html{font-size:16px;scroll-behavior:smooth}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Inter','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+      background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh
+    }
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:3px}
+
+    /* Header */
+    .header{
+      position:fixed;top:0;left:0;right:0;height:56px;
+      background:rgba(20,20,22,0.85);backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
+      padding:0 24px;z-index:1000
+    }
+    .header .logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700}
+    .header .logo-icon{width:28px;height:28px;background:var(--gradient);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+    .header nav{display:flex;gap:4px;align-items:center}
+    .header nav a{color:var(--text-2);font-size:13px;font-weight:500;padding:6px 12px;border-radius:var(--radius-sm);transition:all .2s;text-decoration:none}
+    .header nav a:hover{color:var(--text);background:var(--surface-2)}
+    .header nav a.active{color:var(--accent);background:var(--accent-subtle)}
+
+    /* Main */
+    .main{padding:80px 24px 40px;max-width:var(--max-width);margin:0 auto}
+    .page-title{font-size:28px;font-weight:800;margin-bottom:4px}
+    .page-desc{color:var(--text-2);font-size:15px;margin-bottom:28px}
+
+    /* Settings bar */
+    .settings-bar{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:16px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px
+    }
+    .settings-bar label{font-size:12px;color:var(--text-3);font-weight:600;white-space:nowrap}
+    .settings-bar input,.settings-bar select{
+      background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+      color:var(--text);padding:7px 12px;font-size:13px;outline:none;transition:border-color .2s
+    }
+    .settings-bar input:focus,.settings-bar select:focus{border-color:var(--accent)}
+    .settings-bar input[type="text"]{min-width:140px;flex:1}
+    .settings-bar select{min-width:110px}
+    .settings-bar .hint{font-size:11px;color:var(--text-3);margin-left:-4px}
+    .settings-toggle{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:13px;padding:6px 10px;border-radius:var(--radius-sm);transition:all .2s}
+    .settings-toggle:hover{color:var(--text);background:var(--surface-2)}
+
+    /* Extra settings collapse */
+    .extra-settings{display:none;margin-top:12px;padding:12px 16px;background:var(--surface-2);border-radius:var(--radius-sm);gap:12px;flex-wrap:wrap;align-items:center}
+    .extra-settings.open{display:flex}
+    .extra-settings label{font-size:12px;color:var(--text-3);font-weight:600;white-space:nowrap}
+    .extra-settings input{background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:6px 10px;font-size:13px;outline:none;transition:border-color .2s}
+    .extra-settings input:focus{border-color:var(--accent)}
+    .extra-settings input[type="text"]{min-width:180px;flex:1}
+
+    /* Input Section */
+    .input-section{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:20px;margin-bottom:20px
+    }
+    .input-section textarea{
+      width:100%;min-height:140px;background:var(--surface-2);border:1px solid var(--border);
+      border-radius:var(--radius-sm);color:var(--text);padding:14px;font-size:14px;line-height:1.7;
+      resize:vertical;outline:none;transition:border-color .2s;font-family:inherit
+    }
+    .input-section textarea:focus{border-color:var(--accent)}
+    .input-section textarea::placeholder{color:var(--text-3)}
+    .input-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:10px}
+    .char-count{font-size:12px;color:var(--text-3)}
+    .btn-group{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* Buttons */
+    .btn{
+      display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:var(--radius-sm);
+      font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .2s;white-space:nowrap
+    }
+    .btn-primary{background:var(--gradient-2);color:#fff}
+    .btn-primary:hover{opacity:.9;box-shadow:0 0 24px var(--accent-glow)}
+    .btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+    .btn-secondary{background:var(--surface-2);color:var(--text);border:1px solid var(--border)}
+    .btn-secondary:hover{background:var(--surface-3);border-color:var(--border-light)}
+    .btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border)}
+    .btn-ghost:hover{color:var(--text);background:var(--surface-2)}
+    .btn-sm{padding:6px 14px;font-size:12px}
+
+    /* Examples */
+    .examples{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+    .example-chip{
+      background:var(--surface-2);border:1px solid var(--border);border-radius:20px;
+      padding:4px 14px;font-size:12px;color:var(--text-2);cursor:pointer;transition:all .2s
+    }
+    .example-chip:hover{background:var(--surface-3);border-color:var(--accent);color:var(--accent)}
+
+    /* Loading & Error */
+    .loading-state{display:none;text-align:center;padding:48px 20px}
+    .loading-state.active{display:block}
+    .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-state p{color:var(--text-2);font-size:14px}
+
+    .error-message{display:none;background:var(--red);color:#fff;padding:12px 18px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:14px}
+    .error-message.active{display:block}
+
+    /* Results */
+    .results-section{display:none}
+    .results-section.active{display:block}
+    .results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+    .results-header h2{font-size:18px;font-weight:700}
+    .results-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* Prompt Cards */
+    .prompt-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+    .prompt-card{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:18px 20px;transition:border-color .2s
+    }
+    .prompt-card:hover{border-color:var(--border-light)}
+    .prompt-card .prompt-num{
+      display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+      background:var(--accent-subtle);color:var(--accent);border-radius:50%;font-size:12px;font-weight:700;
+      margin-bottom:8px
+    }
+    .prompt-card .prompt-scene{font-size:15px;font-weight:600;margin-bottom:4px;color:var(--text)}
+    .prompt-card .prompt-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+    .prompt-card .prompt-tag{font-size:11px;padding:2px 10px;border-radius:10px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border)}
+    .prompt-card .prompt-text{
+      background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+      padding:12px 14px;font-size:13px;line-height:1.7;color:var(--text-2);font-family:'SF Mono','Menlo','Monaco',monospace;
+      white-space:pre-wrap;word-break:break-word;margin-top:8px
+    }
+    .prompt-card .prompt-text .lang-label{
+      font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px
+    }
+    .prompt-card .copy-mini{
+      float:right;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;
+      color:var(--text-2);cursor:pointer;padding:4px 10px;font-size:11px;transition:all .2s
+    }
+    .prompt-card .copy-mini:hover{background:var(--surface-3);color:var(--accent)}
+
+    /* Toast */
+    .toast{
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface-3);
+      border:1px solid var(--border);color:var(--text);padding:10px 24px;border-radius:var(--radius-sm);
+      font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none
+    }
+    .toast.active{opacity:1}
+
+    /* Responsive */
+    @media(max-width:640px){
+      .settings-bar{flex-direction:column;align-items:stretch}
+      .settings-bar input[type="text"]{min-width:0;width:100%}
+      .extra-settings{flex-direction:column;align-items:stretch}
+      .extra-settings input[type="text"]{width:100%}
+      .main{padding:76px 16px 30px}
+      .page-title{font-size:22px}
+      .input-section textarea{min-height:100px}
+      .prompt-card{padding:14px 16px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="logo"><span class="logo-icon">🎬</span> AI Film Tools</div>
+  <nav>
+    <a href="prompt-generator.html" class="active">提示词</a>
+    <a href="storyboard-generator.html">分镜</a>
+    <a href="character-generator.html">角色</a>
+  </nav>
+</header>
+
+<div class="main">
+  <h1 class="page-title">🎯 AI 提示词生成器</h1>
+  <p class="page-desc">输入场景描述，AI 将为你生成电影级提示词，适用于 Midjourney / Stable Diffusion / DALL·E</p>
+
+  <!-- Settings -->
+  <div class="settings-bar">
+    <label for="apiKey">API Key</label>
+    <input type="text" id="apiKey" placeholder="sk-... 输入你的 API 密钥" value="">
+    <button class="settings-toggle" id="settingsToggle">⚙️ 更多设置</button>
+  </div>
+  <div class="extra-settings" id="extraSettings">
+    <label for="apiBase">API 地址</label>
+    <input type="text" id="apiBase" placeholder="https://api.deepseek.com" value="https://api.deepseek.com">
+    <label for="modelName">模型</label>
+    <input type="text" id="modelName" placeholder="deepseek-chat" value="deepseek-chat">
+    <label for="promptCount">生成数</label>
+    <select id="promptCount">
+      <option value="3">3 条</option>
+      <option value="5" selected>5 条</option>
+      <option value="8">8 条</option>
+      <option value="10">10 条</option>
+    </select>
+    <label for="styleSelect">风格</label>
+    <select id="styleSelect">
+      <option value="cinematic">电影级</option>
+      <option value="anime">动画/动漫</option>
+      <option value="realistic">超写实</option>
+      <option value="fantasy">奇幻</option>
+    </select>
+  </div>
+
+  <!-- Input -->
+  <div class="input-section">
+    <div class="examples">
+      <span class="example-chip" data-example="夕阳下，主角站在废弃城市的楼顶，俯瞰整座被绿植覆盖的废墟，风吹过他的风衣">🌆 末世废土</span>
+      <span class="example-chip" data-example="雨夜霓虹街道，一名侦探站在昏暗的小巷中，面前是一具发光的尸体">🔍 赛博朋克</span>
+      <span class="example-chip" data-example="古老的森林深处，一道光束穿过茂密的树冠，照亮了石阶上的古老符文">🌲 奇幻森林</span>
+      <span class="example-chip" data-example="宇航员漂浮在彩色星云前，伸手触碰一颗发光的晶体">🚀 太空科幻</span>
+    </div>
+    <textarea id="sceneInput" placeholder="描述你想生成的电影场景...&#10;例如：一名武士在黄昏的竹林中对峙，风卷起竹叶，夕阳透过竹林的缝隙洒下斑驳的光影"></textarea>
+    <div class="input-footer">
+      <span class="char-count" id="charCount">0</span>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="generateBtn">✨ 生成提示词</button>
+        <button class="btn btn-ghost btn-sm" id="clearBtn">清空</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-message" id="errorMessage"></div>
+
+  <!-- Loading -->
+  <div class="loading-state" id="loadingState">
+    <div class="spinner"></div>
+    <p>🤔 AI 正在构思电影级画面...</p>
+  </div>
+
+  <!-- Results -->
+  <div class="results-section" id="resultsSection">
+    <div class="results-header">
+      <h2>📋 生成的提示词</h2>
+      <div class="results-actions">
+        <button class="btn btn-secondary btn-sm" id="copyAllBtn">📋 复制全部</button>
+        <button class="btn btn-secondary btn-sm" id="exportBtn">📥 导出 Markdown</button>
+        <button class="btn btn-ghost btn-sm" id="newBtn">🔄 重新生成</button>
+      </div>
+    </div>
+    <div class="prompt-grid" id="promptGrid"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ── DOM references ──
+  const apiKeyInput = document.getElementById('apiKey');
+  const apiBaseInput = document.getElementById('apiBase');
+  const modelNameInput = document.getElementById('modelName');
+  const sceneInput = document.getElementById('sceneInput');
+  const promptCount = document.getElementById('promptCount');
+  const styleSelect = document.getElementById('styleSelect');
+  const generateBtn = document.getElementById('generateBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const errorMessage = document.getElementById('errorMessage');
+  const loadingState = document.getElementById('loadingState');
+  const resultsSection = document.getElementById('resultsSection');
+  const promptGrid = document.getElementById('promptGrid');
+  const copyAllBtn = document.getElementById('copyAllBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const newBtn = document.getElementById('newBtn');
+  const charCount = document.getElementById('charCount');
+  const toast = document.getElementById('toast');
+  const settingsToggle = document.getElementById('settingsToggle');
+  const extraSettings = document.getElementById('extraSettings');
+
+  let currentPrompts = [];
+
+  // ── Load saved settings ──
+  try {
+    const savedKey = localStorage.getItem('af_api_key');
+    if (savedKey) apiKeyInput.value = savedKey;
+    const savedBase = localStorage.getItem('af_api_base');
+    if (savedBase) apiBaseInput.value = savedBase;
+    const savedModel = localStorage.getItem('af_api_model');
+    if (savedModel) modelNameInput.value = savedModel;
+  } catch(e) {}
+
+  // ── Auto-save ──
+  apiKeyInput.addEventListener('change', () => { try { localStorage.setItem('af_api_key', apiKeyInput.value); } catch(e) {} });
+  apiBaseInput.addEventListener('change', () => { try { localStorage.setItem('af_api_base', apiBaseInput.value); } catch(e) {} });
+  modelNameInput.addEventListener('change', () => { try { localStorage.setItem('af_api_model', modelNameInput.value); } catch(e) {} });
+
+  // ── Settings toggle ──
+  settingsToggle.addEventListener('click', () => {
+    extraSettings.classList.toggle('open');
+    settingsToggle.textContent = extraSettings.classList.contains('open') ? '🔽 收起设置' : '⚙️ 更多设置';
+  });
+
+  // ── Char count ──
+  sceneInput.addEventListener('input', () => { charCount.textContent = sceneInput.value.length; });
+
+  // ── Examples ──
+  document.querySelectorAll('.example-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      sceneInput.value = chip.dataset.example;
+      charCount.textContent = sceneInput.value.length;
+      sceneInput.focus();
+    });
+  });
+
+  // ── Clear ──
+  clearBtn.addEventListener('click', () => {
+    sceneInput.value = '';
+    charCount.textContent = '0';
+    sceneInput.focus();
+  });
+
+  // ── Generate ──
+  generateBtn.addEventListener('click', generatePrompts);
+  sceneInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.metaKey) generatePrompts();
+  });
+
+  async function generatePrompts() {
+    const scene = sceneInput.value.trim();
+    const apiKey = apiKeyInput.value.trim();
+    const apiBase = apiBaseInput.value.trim() || 'https://api.deepseek.com';
+    const model = modelNameInput.value.trim() || 'deepseek-chat';
+    const count = parseInt(promptCount.value);
+    const style = styleSelect.value;
+
+    if (!scene) { showError('请先描述你的电影场景'); return; }
+    if (!apiKey) { showError('请输入你的 API 密钥'); return; }
+
+    generateBtn.disabled = true;
+    generateBtn.textContent = '⏳ 生成中...';
+    resultsSection.classList.remove('active');
+    loadingState.classList.add('active');
+    errorMessage.classList.remove('active');
+
+    const styleMap = {
+      cinematic: '电影级写实风格，参考好莱坞大片镜头语言',
+      anime: '日本动画/动漫风格，参考新海诚或宫崎骏的画风',
+      realistic: '超写实摄影风格，8K 超高清，照片级真实感',
+      fantasy: '奇幻艺术风格，色彩丰富，充满魔法感和神秘氛围'
+    };
+
+    const systemPrompt = `你是一位专业的电影镜头设计师和 AI 提示词工程师。根据用户描述的场景，生成 ${count} 条不同的电影级 AI 图像提示词。
+
+每条提示词包含：
+1. 一个简短的中文场景标题
+2. 场景类型标签（如：全景、特写、中景等）
+3. 完整的英文提示词（适合 Midjourney / Stable Diffusion / DALL·E）
+4. 中文场景描述
+
+风格要求：${styleMap[style] || styleMap.cinematic}
+
+仅输出 JSON 数组（不要 markdown 标记，不要附加说明）。每个对象格式：
+{
+  "title": "场景标题（中文）",
+  "type": "景别类型（中文，如：广角全景 / 特写 / 中景）",
+  "tags": ["氛围词1", "氛围词2", "风格标签"],
+  "prompt_en": "完整的英文提示词，包含主体、环境、光线、构图、色彩、风格、镜头参数等细节",
+  "description": "中文场景描述，解释画面构成和视觉重点"
+}
+
+规则：
+- 每条提示词必须风格统一但画面内容不同
+- 英文提示词要详尽丰富，包含相机参数（如 50mm, f/1.8）、光线描述、色彩调性
+- 提示词以 "cinematic still, " 或 "photorealistic, " 开头
+- 涵盖不同的景别（广角、中景、特写、过肩镜头等）
+- 生成恰好 ${count} 条提示词
+- 使用双引号，内部双引号用反斜杠转义`;
+
+    try {
+      const response = await fetch(apiBase.replace(/\/+$/,'') + '/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: '场景描述：' + scene }
+          ],
+          temperature: 0.8,
+          max_tokens: 4096
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error('API 错误 (' + response.status + '): ' + err);
+      }
+
+      const data = await response.json();
+      const content = data.choices[0].message.content;
+
+      let prompts;
+      try {
+        prompts = JSON.parse(content);
+      } catch(e) {
+        const jsonMatch = content.match(/\`\`\`(?:json)?\s*([\s\S]*?)\`\`\`/);
+        if (jsonMatch) {
+          prompts = JSON.parse(jsonMatch[1]);
+        } else {
+          const arrMatch = content.match(/\[[\s\S]*\]/);
+          if (arrMatch) {
+            prompts = JSON.parse(arrMatch[0]);
+          } else {
+            throw new Error('无法从 API 响应中解析提示词数据');
+          }
+        }
+      }
+
+      currentPrompts = prompts;
+      renderPrompts(prompts);
+      resultsSection.classList.add('active');
+      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast('✅ 已生成 ' + prompts.length + ' 条提示词');
+    } catch(err) {
+      showError('⚠️ ' + err.message);
+    } finally {
+      generateBtn.disabled = false;
+      generateBtn.textContent = '✨ 生成提示词';
+      loadingState.classList.remove('active');
+    }
+  }
+
+  // ── Render ──
+  function renderPrompts(prompts) {
+    promptGrid.innerHTML = '';
+    prompts.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'prompt-card';
+      card.innerHTML = `
+        <div class="prompt-num">${i + 1}</div>
+        <div class="prompt-scene">${escapeHtml(p.title)}</div>
+        <div class="prompt-tags">
+          <span class="prompt-tag">${escapeHtml(p.type || '')}</span>
+          ${(p.tags || []).map(t => `<span class="prompt-tag">${escapeHtml(t)}</span>`).join('')}
+        </div>
+        <div class="prompt-text">
+          <div class="lang-label">📷 AI Prompt (English)</div>
+          <button class="copy-mini" data-text="${escapeAttr(p.prompt_en)}">📋 复制</button>
+          ${escapeHtml(p.prompt_en)}
+        </div>
+        ${p.description ? `<div style="margin-top:6px;font-size:13px;color:var(--text-2)">💬 ${escapeHtml(p.description)}</div>` : ''}
+      `;
+      promptGrid.appendChild(card);
+    });
+
+    // Copy mini buttons
+    promptGrid.querySelectorAll('.copy-mini').forEach(btn => {
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(btn.dataset.text).then(() => {
+          showToast('📋 已复制到剪贴板');
+        }).catch(() => {
+          const ta = document.createElement('textarea');
+          ta.value = btn.dataset.text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('📋 已复制到剪贴板');
+        });
+      });
+    });
+  }
+
+  // ── Copy all ──
+  copyAllBtn.addEventListener('click', () => {
+    if (!currentPrompts.length) return;
+    const text = currentPrompts.map((p, i) => {
+      return `## ${i + 1}. ${p.title}\n\n**类型**: ${p.type || '-'}\n\n**Prompt**:\n${p.prompt_en}\n\n**描述**: ${p.description || '-'}\n`;
+    }).join('\n---\n\n');
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('📋 全部提示词已复制');
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('📋 全部提示词已复制');
+    });
+  });
+
+  // ── Export ──
+  exportBtn.addEventListener('click', () => {
+    if (!currentPrompts.length) return;
+    const sceneTitle = sceneInput.value.trim().slice(0, 40);
+    let md = `# 🎯 AI 提示词生成报告\n\n`;
+    md += `**场景**: ${sceneTitle}\n`;
+    md += `**生成时间**: ${new Date().toLocaleString('zh-CN')}\n`;
+    md += `**数量**: ${currentPrompts.length} 条\n\n---\n\n`;
+    currentPrompts.forEach((p, i) => {
+      md += `## ${i + 1}. ${p.title}\n\n`;
+      md += `- **类型**: ${p.type || '-'}\n`;
+      md += `- **标签**: ${(p.tags || []).join('、') || '-'}\n\n`;
+      md += `**Prompt (English):**\n\`\`\`\n${p.prompt_en}\n\`\`\`\n\n`;
+      if (p.description) md += `**描述**: ${p.description}\n\n`;
+      md += `---\n\n`;
+    });
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ai-prompts-' + new Date().toISOString().slice(0, 10) + '.md';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📥 Markdown 已导出');
+  });
+
+  // ── New ──
+  newBtn.addEventListener('click', () => {
+    resultsSection.classList.remove('active');
+    promptGrid.innerHTML = '';
+    currentPrompts = [];
+    sceneInput.focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ── Helpers ──
+  function showError(msg) {
+    errorMessage.textContent = msg;
+    errorMessage.classList.add('active');
+    loadingState.classList.remove('active');
+  }
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('active');
+    setTimeout(() => toast.classList.remove('active'), 3000);
+  }
+  function escapeHtml(str) {
+    if (!str) return '';
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+  function escapeAttr(str) {
+    if (!str) return '';
+    return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  console.log('🎯 AI 提示词生成器已加载');
+})();
+</script>
+</body>
+</html>
