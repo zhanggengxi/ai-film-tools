@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI提示词商店 · AI Film Tools</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0a0b;--surface:#141416;--surface-2:#1c1c1f;--border:#2a2a2e;--text:#f4f4f5;--text-2:#a1a1aa;--accent:#6366f1;--green:#22c55e;--orange:#f59e0b}
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+    .container{max-width:900px;margin:0 auto;padding:40px 20px}
+    h1{font-size:28px;margin-bottom:8px}
+    .sub{color:var(--text-2);font-size:14px;margin-bottom:40px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;transition:border-color .2s}
+    .card:hover{border-color:var(--accent)}
+    .tag{display:inline-block;background:rgba(99,102,241,.15);color:var(--accent);font-size:11px;padding:2px 8px;border-radius:4px;margin-bottom:12px}
+    .card h2{font-size:18px;margin-bottom:8px}
+    .card p{color:var(--text-2);font-size:13px;line-height:1.6;margin-bottom:16px}
+    .price{font-size:24px;font-weight:700;margin-bottom:4px}
+    .price small{font-size:14px;font-weight:400;color:var(--text-2)}
+    .specs{list-style:none;margin-bottom:16px}
+    .specs li{font-size:12px;color:var(--text-2);padding:3px 0;padding-left:16px;position:relative}
+    .specs li::before{content:'✓';position:absolute;left:0;color:var(--green)}
+    .btn{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;transition:opacity .2s;width:100%;justify-content:center}
+    .btn:hover{opacity:.9}
+    .contact{margin-top:60px;padding:24px;background:var(--surface-2);border-radius:12px;text-align:center}
+    .contact p{color:var(--text-2);font-size:13px;margin-bottom:12px}
+    .qrcode{display:inline-block;padding:16px;background:white;border-radius:8px;margin:8px}
+    .qrcode img{width:160px;height:160px;display:block}
+    .qrcode-label{font-size:11px;color:#333;text-align:center;margin-top:6px}
+    .back{display:inline-flex;align-items:center;gap:6px;color:var(--text-2);font-size:13px;text-decoration:none;margin-bottom:24px}
+    .back:hover{color:var(--text)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/ai-film-tools/" class="back">← 返回产能看板</a>
+    <h1>🎬 AI提示词商店</h1>
+    <p class="sub">专业AI影视提示词包，即买即用 · 持续更新</p>
+
+    <div class="grid">
+      <div class="card">
+        <span class="tag">热卖</span>
+        <h2>🎬 AI短剧分镜提示词包</h2>
+        <p>50个精修AI视频提示词，覆盖古装仙侠·现代都市·科幻未来·悬疑惊悚·奇幻冒险五大类型。中英双语，可直接复制到 Runway / Pika / Sora / Kling 使用。</p>
+        <ul class="specs">
+          <li>50个专业分镜提示词（中英双语）</li>
+          <li>含画面描述 + 风格参数 + 镜头建议</li>
+          <li>适配所有主流AI视频工具</li>
+          <li>购买后免费获取后续更新</li>
+        </ul>
+        <div class="price">¥29 <small>一次购买，永久有效</small></div>
+        <br>
+        <a href="#pay" class="btn">立即购买</a>
+      </div>
+
+      <div class="card">
+        <span class="tag">新上架</span>
+        <h2>🎨 AI角色设定卡提示词包</h2>
+        <p>30个精修角色设定提示词，覆盖古风仙侠·现代都市·奇幻生物·科幻角色·历史人物。适用于 Midjourney / DALL-E / Stable Diffusion。</p>
+        <ul class="specs">
+          <li>30个专业角色设定提示词（中英双语）</li>
+          <li>含角色描述 + 服装细节 + 场景氛围</li>
+          <li>附赠角色设定卡模板</li>
+          <li>购买后免费获取后续更新</li>
+        </ul>
+        <div class="price">¥29 <small>一次购买，永久有效</small></div>
+        <br>
+        <a href="#pay" class="btn">立即购买</a>
+      </div>
+    </div>
+
+    <div id="pay" class="contact">
+      <h3>💰 购买方式</h3>
+      <p>扫码付款后，在公众号/后台留言你的邮箱，我们会把产品文件发送给你</p>
+      <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap">
+        <div class="qrcode">
+          <div style="width:160px;height:160px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px">
+            [微信收款码]
+          </div>
+          <div class="qrcode-label">微信支付</div>
+        </div>
+        <div class="qrcode">
+          <div style="width:160px;height:160px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px">
+            [支付宝收款码]
+          </div>
+          <div class="qrcode-label">支付宝</div>
+        </div>
+      </div>
+      <p style="margin-top:16px">付款后联系微信：<strong>18613988883</strong> 领取产品</p>
+    </div>
+
+    <div style="margin-top:40px;text-align:center;color:var(--text-2);font-size:12px">
+      <p>AI Film Tools · 让AI影视创作更简单</p>
+    </div>
+  </div>
+</body>
+</html>
